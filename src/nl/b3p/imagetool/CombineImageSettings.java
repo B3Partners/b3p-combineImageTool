@@ -19,7 +19,7 @@ public class CombineImageSettings {
     private ArrayList urls = null;
     private ArrayList wktGeoms = null;
     private Bbox bbox = null;
-    private Integer srid = null;
+    private Integer srid = 28992;
     private Integer width = null;
     private Integer height = null;
     private Color wktGeomColor= Color.RED;
@@ -52,6 +52,22 @@ public class CombineImageSettings {
 
         public Bbox(Bbox b){
             setBbox(b.toDoubleArray());
+        }
+
+        private Bbox(String bbox) {
+            try{
+                String[] b = bbox.split(",");
+                if (b.length==4){
+                    minx = Double.parseDouble(b[0]);
+                    miny = Double.parseDouble(b[1]);
+                    maxx = Double.parseDouble(b[2]);
+                    maxy = Double.parseDouble(b[3]);
+                }else{
+                    throw new Exception("Constructor needs 4 coords.");
+                }
+            }catch(Exception e){
+                log.error("Can't add BBOX: bbox",e);
+            }
         }
 
         public void setBbox(double[] b){
@@ -198,6 +214,13 @@ public class CombineImageSettings {
         return urls;
     }
 
+    public void setUrls(String[] urls){
+        this.urls=new ArrayList();
+        for (int i=0; i < urls.length; i++){
+            this.urls.add(urls[i]);
+        }
+    }
+
     public void setUrls(ArrayList urls) {
         this.urls = urls;
     }
@@ -209,12 +232,20 @@ public class CombineImageSettings {
     public void setWktGeoms(ArrayList wktGeoms) {
         this.wktGeoms = wktGeoms;
     }
-
+    public void setWktGeoms(String[] wktGeoms){
+        this.wktGeoms=new ArrayList();
+        for (int i=0; i < wktGeoms.length; i++){
+            this.wktGeoms.add(wktGeoms[i]);
+        }
+    }
     public Bbox getBbox() {
         return bbox;
     }
 
     public void setBbox(double[] bbox) {
+        this.bbox = new Bbox(bbox);
+    }
+    public void setBbox(String bbox) {
         this.bbox = new Bbox(bbox);
     }
 
