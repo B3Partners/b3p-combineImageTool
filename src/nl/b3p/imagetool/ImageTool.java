@@ -101,19 +101,23 @@ public class ImageTool {
         ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
         ir.setInput(stream, true);
         BufferedImage i= ir.read(0);
-        PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
-        if(!i.getColorModel().hasAlpha() && metadata.tRNS_present) {
-            int alphaPix = (metadata.tRNS_red<<16)|(metadata.tRNS_green<<8)|(metadata.tRNS_blue);
-            BufferedImage tmp = new BufferedImage(i.getWidth(),i.getHeight(),
-                    BufferedImage.TYPE_INT_ARGB);
-            for(int x = 0; x < i.getWidth(); x++) {
-                for(int y = 0; y < i.getHeight(); y++) {
-                    int rgb = i.getRGB(x, y);
-                    rgb = (rgb&0xFFFFFF)==alphaPix?alphaPix:rgb;
-                    tmp.setRGB(x, y, rgb);
+        
+        if(!i.getColorModel().hasAlpha() && ir.getImageMetadata(0) instanceof PNGMetadata){
+            PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
+            if (metadata.tRNS_present) {
+                int alphaPix = (metadata.tRNS_red<<16)|(metadata.tRNS_green<<8)|(metadata.tRNS_blue);
+                log.info("AlphaPix: "+alphaPix);
+                BufferedImage tmp = new BufferedImage(i.getWidth(),i.getHeight(),
+                        BufferedImage.TYPE_INT_ARGB);
+                for(int x = 0; x < i.getWidth(); x++) {
+                    for(int y = 0; y < i.getHeight(); y++) {
+                        int rgb = i.getRGB(x, y);
+                        rgb = (rgb&0xFFFFFF)==alphaPix?alphaPix:rgb;
+                        tmp.setRGB(x, y, rgb);
+                    }
                 }
+                i = tmp;
             }
-            i = tmp;
         }
         return i;
     }
