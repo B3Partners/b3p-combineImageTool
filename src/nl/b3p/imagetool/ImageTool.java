@@ -21,6 +21,7 @@
  */
 package nl.b3p.imagetool;
 
+import com.sun.imageio.plugins.png.PNGMetadata;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
@@ -99,8 +100,22 @@ public class ImageTool {
         }
         ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
         ir.setInput(stream, true);
-        return ir.read(0);
-
+        BufferedImage i= ir.read(0);
+        PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
+        if(!i.getColorModel().hasAlpha() && metadata.tRNS_present) {
+            int alphaPix = (metadata.tRNS_red<<16)|(metadata.tRNS_green<<8)|(metadata.tRNS_blue);
+            BufferedImage tmp = new BufferedImage(i.getWidth(),i.getHeight(),
+                    BufferedImage.TYPE_INT_ARGB);
+            for(int x = 0; x < i.getWidth(); x++) {
+                for(int y = 0; y < i.getHeight(); y++) {
+                    int rgb = i.getRGB(x, y);
+                    rgb = (rgb&0xFFFFFF)==alphaPix?alphaPix:rgb;
+                    tmp.setRGB(x, y, rgb);
+                }
+            }
+            i = tmp;
+        }
+        return i;
     }
     // </editor-fold>
 
@@ -439,6 +454,20 @@ public class ImageTool {
             imTest = (ImageWriter) it.next();
         }
         return imTest;
+    }
+
+    /**
+     *
+     */
+    public static BufferedImage changeColor(BufferedImage im, Color color,Color newColor){
+        for (int x=0; x < im.getWidth(); x++){
+            for (int y=0; y < im.getHeight(); y++){
+                if (im.getRGB(x, y) == color.getRGB()){
+                    im.setRGB(x,y,newColor.getRGB());
+                }
+            }
+        }
+        return im;
     }
     // </editor-fold>
 }
