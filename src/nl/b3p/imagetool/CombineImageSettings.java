@@ -23,6 +23,7 @@ public class CombineImageSettings {
     private Integer width = null;
     private Integer height = null;
     private Color wktGeomColor= Color.RED;
+    private String mimeType="image/png";
 
     /**
      * @return the wktGeomColor
@@ -36,6 +37,20 @@ public class CombineImageSettings {
      */
     public void setWktGeomColor(Color wktGeomColor) {
         this.wktGeomColor = wktGeomColor;
+    }
+
+    /**
+     * @return the mimeType
+     */
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    /**
+     * @param mimeType the mimeType to set
+     */
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     public class Bbox {

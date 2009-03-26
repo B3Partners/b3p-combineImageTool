@@ -30,7 +30,9 @@ public class CombineImagesHandler{
             if (urls==null){
                 urls=settings.getUrls();
             }
-
+            if (urls==null || urls.size()==0){
+                throw new Exception ("No image urls found!");
+            }
             ArrayList wktGeoms = settings.getWktGeoms();
                         
             //haal de plaatjes van de urls op.
