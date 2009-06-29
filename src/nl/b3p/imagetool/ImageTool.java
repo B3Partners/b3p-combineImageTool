@@ -30,6 +30,7 @@ import com.vividsolutions.jts.io.WKTReader;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -146,7 +147,7 @@ public class ImageTool {
         }
     }
 
-    public static BufferedImage drawGeometries(BufferedImage bi,ArrayList wktGeoms, CombineImageSettings settings) throws Exception{
+    public static BufferedImage drawGeometries(BufferedImage bi, CombineImageSettings settings) throws Exception{
         int srid=28992;
         if (settings.getSrid()!=null)
             srid=((int) settings.getSrid());
@@ -173,21 +174,37 @@ public class ImageTool {
             log.error("Geen bbox gevonden in een url of als parameter.");
             throw new Exception ("Can't find bbox in settings or URL");
         }
-        return drawGeometries(bi,wktGeoms,settings.getWktGeomColor(),srid,bbox,width,height);
+        return drawGeometries(bi,settings,srid,bbox,width,height);
 
     }
-    public static BufferedImage drawGeometries(BufferedImage bi,ArrayList wktGeoms, Color color,int srid, Bbox bbox,int width,int height) throws Exception{
+    public static BufferedImage drawGeometries(BufferedImage bi,CombineImageSettings settings,int srid, Bbox bbox,int width,int height) throws Exception{
+        ArrayList wktGeoms=settings.getWktGeoms();
         if (wktGeoms==null || wktGeoms.size() <=0)
             return bi;
         //BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
         Graphics2D gbi = bi.createGraphics();
-        gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OVER, 0.5f));
-        gbi.setColor(color);
+        gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
         for (int i=0; i < wktGeoms.size(); i++){
-            Geometry geom = geometrieFromText((String)wktGeoms.get(i), srid);
+            CombineImageWkt ciw= (CombineImageWkt) wktGeoms.get(i);
+            Color color=settings.getDefaultWktGeomColor();
+            if (ciw.getColor()!=null)
+                color= ciw.getColor();
+            gbi.setColor(color);
+            String wktGeom=ciw.getWktGeom();
+            Geometry geom = geometrieFromText(wktGeom, srid);
             Shape shape=createImage(geom,srid,bbox,width,height);
             gbi.fill(shape);
-        }
+            if(ciw.getLabel()!=null){
+                double x=shape.getBounds2D().getCenterX();
+                double y=shape.getBounds2D().getCenterY();
+                Point p=new Point();
+                p.setLocation(x, y);
+                p=transformToScreen(p,srid,bbox,width,height);
+                gbi.setColor(Color.black);
+                gbi.drawString(ciw.getLabel(),(float)p.getX(),(float)p.getY());
+            }
+        }        
+        gbi.dispose();
         return bi;
     }
     public static Shape createImage(Geometry geometrie,int bboxSrid, Bbox bbox, int width, int height) throws Exception{
@@ -196,7 +213,13 @@ public class ImageTool {
         LiteShape ls = new LiteShape(geometrie,transform,false);
         return ls;
     }
-
+    public static Point transformToScreen(Point source,int bboxSrid, Bbox bbox, int width, int height) throws Exception{
+        ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(),bbox.getMaxx(),bbox.getMiny(),bbox.getMaxy(),CRS.decode("EPSG:"+bboxSrid));
+        AffineTransform transform=RendererUtilities.worldToScreenTransform(re, new Rectangle(width,height));
+        Point result = new Point();
+        transform.transform(source, result);
+        return result;
+    }
     public static Geometry geometrieFromText(String wktgeom,int srid){
         WKTReader wktreader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
         try {

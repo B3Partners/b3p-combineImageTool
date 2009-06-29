@@ -33,7 +33,6 @@ public class CombineImagesHandler{
             if (urls==null || urls.size()==0){
                 throw new Exception ("No image urls found!");
             }
-            ArrayList wktGeoms = settings.getWktGeoms();
                         
             //haal de plaatjes van de urls op.
             ImageManager im = new ImageManager(urls,maxResponseTime);
@@ -48,8 +47,8 @@ public class CombineImagesHandler{
             //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
             BufferedImage combinedImages= ImageTool.combineImages(bi,returnMime);
             try{
-                if(wktGeoms!=null){
-                   returnImage=ImageTool.drawGeometries(combinedImages,wktGeoms, settings);
+                if(settings.getWktGeoms()!=null){
+                   returnImage=ImageTool.drawGeometries(combinedImages, settings);
                 }else{
                    returnImage=combinedImages;
                 }

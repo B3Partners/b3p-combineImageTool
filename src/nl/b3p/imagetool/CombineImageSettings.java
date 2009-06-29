@@ -22,21 +22,21 @@ public class CombineImageSettings {
     private Integer srid = 28992;
     private Integer width = null;
     private Integer height = null;
-    private Color wktGeomColor= Color.RED;
+    private Color defaultWktGeomColor= Color.RED;
     private String mimeType="image/png";
 
     /**
      * @return the wktGeomColor
      */
-    public Color getWktGeomColor() {
-        return wktGeomColor;
+    public Color getDefaultWktGeomColor() {
+        return defaultWktGeomColor;
     }
 
     /**
      * @param wktGeomColor the wktGeomColor to set
      */
-    public void setWktGeomColor(Color wktGeomColor) {
-        this.wktGeomColor = wktGeomColor;
+    public void setDefaultWktGeomColor(Color defaultWktGeomColor) {
+        this.defaultWktGeomColor = defaultWktGeomColor;
     }
 
     /**
@@ -165,7 +165,7 @@ public class CombineImageSettings {
     public ArrayList getCalculatedUrls(ArrayList oldList){
         ArrayList returnValue=new ArrayList();
         if (bbox == null || width == null || height == null) {
-            log.info("Not all settings set (width,height and bbox must be set to recalculate). Return original urls");
+            //log.info("Not all settings set (width,height and bbox must be set to recalculate). Return original urls");
             return oldList;
         }else if(oldList==null){
             return returnValue;
@@ -185,7 +185,7 @@ public class CombineImageSettings {
      */
     public String getCalculatedUrl(String url){
         if (bbox == null || width == null || height == null) {
-            log.error("Not all settings set (width,height and bbox must be set)");
+            log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
         Bbox newBbox= getCalculatedBbox();
@@ -202,7 +202,7 @@ public class CombineImageSettings {
      */
     public Bbox getCalculatedBbox(){
         if (bbox == null || width == null || height == null) {
-            log.error("Not all settings set (width,height and bbox must be set)");
+            log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
         Bbox newBbox= new Bbox(bbox);
@@ -250,7 +250,25 @@ public class CombineImageSettings {
     public void setWktGeoms(String[] wktGeoms){
         this.wktGeoms=new ArrayList();
         for (int i=0; i < wktGeoms.length; i++){
-            this.wktGeoms.add(wktGeoms[i]);
+            int colorIndex=wktGeoms[i].indexOf("#");
+            int labelIndex=wktGeoms[i].indexOf("|");
+            int wktEnd= wktGeoms[i].length();
+            if (colorIndex > 0)
+                wktEnd=colorIndex;
+            if (labelIndex > 0 && labelIndex < wktEnd){
+                wktEnd=labelIndex;
+            }
+            CombineImageWkt ciw= new CombineImageWkt(wktGeoms[i].substring(0,wktEnd));
+            if (colorIndex>0){
+                int colorEnd= labelIndex!=-1&& labelIndex>colorIndex?labelIndex:wktGeoms[i].length();
+                String color=wktGeoms[i].substring(colorIndex+1,colorEnd);
+                ciw.setColor(color);
+            }
+            if (labelIndex>0){
+                int labelEnd= colorIndex!=-1&& colorIndex>labelIndex?colorIndex:wktGeoms[i].length();
+                ciw.setLabel(wktGeoms[i].substring(labelIndex+1,labelEnd));
+            }
+            this.wktGeoms.add(ciw);
         }
     }
     public Bbox getBbox() {
