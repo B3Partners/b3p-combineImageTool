@@ -24,16 +24,19 @@ package nl.b3p.imagetool;
 import com.sun.imageio.plugins.png.PNGMetadata;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -193,19 +196,33 @@ public class ImageTool {
             String wktGeom=ciw.getWktGeom();
             Geometry geom = geometrieFromText(wktGeom, srid);
             Shape shape=createImage(geom,srid,bbox,width,height);
-            gbi.fill(shape);
+            Point centerPoint=null;
+            if (geom instanceof Polygon){
+                gbi.fill(shape);
+            }else if (geom instanceof com.vividsolutions.jts.geom.Point){
+                centerPoint=calculateCenter(shape,srid,bbox,width,height);
+                gbi.draw(new Ellipse2D.Double(centerPoint.getX(),centerPoint.getY(),4,4));
+            }else{
+                gbi.setStroke(new BasicStroke(3));
+                gbi.draw(shape);
+            }
             if(ciw.getLabel()!=null){
-                double x=shape.getBounds2D().getCenterX();
-                double y=shape.getBounds2D().getCenterY();
-                Point p=new Point();
-                p.setLocation(x, y);
-                p=transformToScreen(p,srid,bbox,width,height);
+                if (centerPoint==null)
+                    centerPoint=calculateCenter(shape,srid,bbox,width,height);
                 gbi.setColor(Color.black);
-                gbi.drawString(ciw.getLabel(),(float)p.getX(),(float)p.getY());
+                gbi.drawString(ciw.getLabel(),(float)centerPoint.getX(),(float)centerPoint.getY());
             }
         }        
         gbi.dispose();
         return bi;
+    }
+    private static Point calculateCenter(Shape shape, int srid, Bbox bbox, int width, int height) throws Exception {
+        Point centerPoint = new Point();
+        double x=shape.getBounds2D().getCenterX();
+        double y=shape.getBounds2D().getCenterY();
+        centerPoint.setLocation(x, y);
+        centerPoint=transformToScreen(centerPoint,srid,bbox,width,height);
+        return centerPoint;
     }
     public static Shape createImage(Geometry geometrie,int bboxSrid, Bbox bbox, int width, int height) throws Exception{
         ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(),bbox.getMaxx(),bbox.getMiny(),bbox.getMaxy(),CRS.decode("EPSG:"+bboxSrid));
