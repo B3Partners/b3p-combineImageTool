@@ -78,6 +78,9 @@ public class ImageTool {
      */
     // <editor-fold defaultstate="" desc="readImage(GetMethod method, String mime) method.">
     public static BufferedImage readImage(HttpMethod method, String mime) throws Exception {
+        ImageReader ir=null;
+        BufferedImage i=null;
+        try{
         if (mime.indexOf(";")!=-1){
             mime=mime.substring(0,mime.indexOf(";"));
         }
@@ -87,7 +90,7 @@ public class ImageTool {
             throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
         }
 
-        ImageReader ir = getReader(mimeType);
+        ir = getReader(mimeType);
         if (ir == null) {
             log.error("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
             throw new Exception("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
@@ -104,7 +107,7 @@ public class ImageTool {
         }
         ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
         ir.setInput(stream, true);
-        BufferedImage i= ir.read(0);
+        i= ir.read(0);
         //if image is a png, has no alpha and has a tRNS then make that color transparent.
         if(!i.getColorModel().hasAlpha() && ir.getImageMetadata(0) instanceof PNGMetadata){
             PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
@@ -120,6 +123,11 @@ public class ImageTool {
                     }
                 }
                 i = tmp;
+            }
+        }
+        }finally{
+            if(ir!=null){
+                ir.dispose();
             }
         }
         return i;
