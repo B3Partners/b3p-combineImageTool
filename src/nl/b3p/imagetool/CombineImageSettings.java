@@ -171,7 +171,7 @@ public class CombineImageSettings {
             return returnValue;
         }        
         for (int i=0; i < oldList.size(); i++){
-            returnValue.add(getCalculatedUrl((String)oldList.get(i)));
+            returnValue.add(getCalculatedUrl(((CombineImageUrl)oldList.get(i))));
         }
         if (returnValue.size()==oldList.size()){
             return returnValue;
@@ -183,17 +183,18 @@ public class CombineImageSettings {
      * Een enkele url omzetten zodat de bbox, width en height goed worden geset.
      * Tot nu alleen WMS urls ondersteund
      */
-    public String getCalculatedUrl(String url){
+    public CombineImageUrl getCalculatedUrl(CombineImageUrl url){
         if (bbox == null || width == null || height == null) {
             log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
         Bbox newBbox= getCalculatedBbox();
-        String newurl=new String(url);
+        String newurl=new String(url.getUrl());
         newurl=changeParameter(newurl, "bbox", newBbox.toString());
         newurl=changeParameter(newurl, "width", width.toString());
         newurl=changeParameter(newurl, "height", height.toString());
-        return newurl;
+        url.setUrl(newurl);
+        return url;
     }
     /**
      * Geeft een kloppende bbox terug. Dus kijkt naar de width en height en past
@@ -231,8 +232,9 @@ public class CombineImageSettings {
 
     public void setUrls(String[] urls){
         this.urls=new ArrayList();
-        for (int i=0; i < urls.length; i++){
-            this.urls.add(urls[i]);
+        for (int i=0; i < urls.length; i++){    
+            CombineImageUrl ciu= new CombineImageUrl(urls[i]);
+            this.urls.add(ciu);
         }
     }
 
@@ -250,24 +252,7 @@ public class CombineImageSettings {
     public void setWktGeoms(String[] wktGeoms){
         this.wktGeoms=new ArrayList();
         for (int i=0; i < wktGeoms.length; i++){
-            int colorIndex=wktGeoms[i].indexOf("#");
-            int labelIndex=wktGeoms[i].indexOf("|");
-            int wktEnd= wktGeoms[i].length();
-            if (colorIndex > 0)
-                wktEnd=colorIndex;
-            if (labelIndex > 0 && labelIndex < wktEnd){
-                wktEnd=labelIndex;
-            }
-            CombineImageWkt ciw= new CombineImageWkt(wktGeoms[i].substring(0,wktEnd));
-            if (colorIndex>0){
-                int colorEnd= labelIndex!=-1&& labelIndex>colorIndex?labelIndex:wktGeoms[i].length();
-                String color=wktGeoms[i].substring(colorIndex+1,colorEnd);
-                ciw.setColor(color);
-            }
-            if (labelIndex>0){
-                int labelEnd= colorIndex!=-1&& colorIndex>labelIndex?colorIndex:wktGeoms[i].length();
-                ciw.setLabel(wktGeoms[i].substring(labelIndex+1,labelEnd));
-            }
+            CombineImageWkt ciw= new CombineImageWkt(wktGeoms[i]);
             this.wktGeoms.add(ciw);
         }
     }
@@ -366,18 +351,19 @@ public class CombineImageSettings {
     public Bbox getBboxFromUrls() {
         Bbox bb = null;
         for (int i = 0; i < urls.size() && bb == null; i++) {
-            bb = getBboxFromUrl((String) urls.get(i));
+            bb = getBboxFromUrl((CombineImageUrl)urls.get(i));
         }
         return bb;
     }
     /**
      * Haalt de bbox van de meegegeven url op (of null als die er niet is)
      */
-    public Bbox getBboxFromUrl(String url) {
-        if (url == null) {
+    public Bbox getBboxFromUrl(CombineImageUrl ciu) {
+        if (ciu != null && ciu.getUrl()!=null) {
             return null;
         }
         double[] bb = null;
+        String url=ciu.getUrl();
         String stringBbox = getParameter(url, "bbox");
         if (stringBbox != null) {
             if (stringBbox.split(",").length != 4) {
@@ -407,12 +393,17 @@ public class CombineImageSettings {
     public Integer[] getWidthAndHeightFromUrls() {
         Integer[] hw = null;
         for (int i = 0; i < urls.size() && hw == null; i++) {
-            hw = getWidthAndHeightFromUrl((String) urls.get(i));
+            hw = getWidthAndHeightFromUrl((CombineImageUrl)urls.get(i));
         }
         return hw;
     }
 
-    public Integer[] getWidthAndHeightFromUrl(String url) {
+    public Integer[] getWidthAndHeightFromUrl(CombineImageUrl ciu) {
+        if (ciu != null && ciu.getUrl()!=null) {
+            return null;
+        }
+        String url=ciu.getUrl();
+
         String heightString = getParameter(url, "height");
         String widthString = getParameter(url, "width");
         Integer[] result = null;

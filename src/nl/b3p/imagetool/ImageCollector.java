@@ -21,6 +21,8 @@
  */
 package nl.b3p.imagetool;
 
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Stack;
 import org.apache.commons.httpclient.HttpClient;
@@ -48,9 +50,16 @@ public class ImageCollector extends Thread {
     private BufferedImage bufferedImage;
     private static Stack stack = new Stack();
     private String url;
+    private Float alpha=null;
 
     public ImageCollector(String url, int maxResponseTime) {
         this.url = url;
+        this.maxResponseTime=maxResponseTime;
+        this.setMessage("Still downloading...");
+    }
+    public ImageCollector(CombineImageUrl ciu, int maxResponseTime) {
+        this.url = ciu.getUrl();
+        this.alpha= ciu.getAlpha();
         this.maxResponseTime=maxResponseTime;
         this.setMessage("Still downloading...");
     }
@@ -64,26 +73,32 @@ public class ImageCollector extends Thread {
         join(maxResponseTime);
     }
 
-    public void run() {        
-        HttpClient client = new HttpClient();
-        HttpMethod method = null;
-        method = new GetMethod(getUrl());        
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
-        try {
-            int statusCode = client.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
-                throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
+    public void run() {
+        if (getUrl()!=null && getUrl().length()>0){
+            HttpClient client = new HttpClient();
+            HttpMethod method = null;
+            method = new GetMethod(getUrl());
+            client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
+            try {
+                int statusCode = client.executeMethod(method);
+                if (statusCode != HttpStatus.SC_OK) {
+                    throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
+                }
+                String mime = method.getResponseHeader("Content-Type").getValue();
+                setBufferedImage(ImageTool.readImage(method, mime));
+                if (alpha!=null && bufferedImage!=null){
+                    AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.DST_IN, alpha);
+                    ((Graphics2D)bufferedImage.getGraphics()).setComposite(ac);
+                }
+                setMessage("");
+                setStatus(COMPLETED);
+            } catch (Exception ex) {
+                log.error("error callimage collector: ", ex);
+                setStatus(ERROR);
+            } finally {
+                if (method!=null)
+                    method.releaseConnection();
             }
-            String mime = method.getResponseHeader("Content-Type").getValue();
-            setBufferedImage(ImageTool.readImage(method, mime));
-            setMessage("");
-            setStatus(COMPLETED);
-        } catch (Exception ex) {
-            log.error("error callimage collector: ", ex);
-            setStatus(ERROR);
-        } finally {
-            if (method!=null)
-                method.releaseConnection();
         }
     }
 

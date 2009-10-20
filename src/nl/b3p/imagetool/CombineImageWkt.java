@@ -17,7 +17,23 @@ public class CombineImageWkt {
     private String label=null;
 
     public CombineImageWkt(String wktGeomString){
-        setWktGeom(wktGeomString);
+        int colorIndex=wktGeomString.indexOf("#");
+        int labelIndex=wktGeomString.indexOf("|");
+        int wktEnd= wktGeomString.length();
+        if (colorIndex > 0)
+            wktEnd=colorIndex;
+        if (labelIndex > 0 && labelIndex < wktEnd){
+            wktEnd=labelIndex;
+        }
+        this.setWktGeom(wktGeomString.substring(0,wktEnd));
+        if (colorIndex>0){
+            int colorEnd= labelIndex!=-1&& labelIndex>colorIndex?labelIndex:wktGeomString.length();            
+            this.setColor(wktGeomString.substring(colorIndex+1,colorEnd));
+        }
+        if (labelIndex>0){
+            int labelEnd= colorIndex!=-1&& colorIndex>labelIndex?colorIndex:wktGeomString.length();
+            this.setLabel(wktGeomString.substring(labelIndex+1,labelEnd));
+        }
     }
     public CombineImageWkt(String wktGeomString, String color){
         setWktGeom(wktGeomString);        

@@ -42,8 +42,13 @@ public class ImageManager {
             return;
         }
         for (int i=0; i < urls.size(); i++){
-            String url= (String)urls.get(i);  
-            ImageCollector ic = new ImageCollector(url,maxResponseTime);
+            Object o = urls.get(i);
+            ImageCollector ic=null;
+            if (o instanceof String){
+                ic = new ImageCollector((String)o,maxResponseTime);
+            }else if (o instanceof CombineImageUrl){
+                ic= new ImageCollector((CombineImageUrl)o, maxResponseTime);
+            }
             ics.add(ic);
         }
     }
