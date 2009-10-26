@@ -74,12 +74,12 @@ public class ImageCollector extends Thread {
     }
 
     public void run() {
-        if (getUrl()!=null && getUrl().length()>0){
+        if (getUrl()!=null && getUrl().length()>0){            
             HttpClient client = new HttpClient();
             HttpMethod method = null;
-            method = new GetMethod(getUrl());
-            client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
             try {
+                method = new GetMethod(getUrl());
+                client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
                 int statusCode = client.executeMethod(method);
                 if (statusCode != HttpStatus.SC_OK) {
                     throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
