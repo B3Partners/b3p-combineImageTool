@@ -351,7 +351,9 @@ public class ImageTool {
         Graphics2D gbi = newBufIm.createGraphics();
 
         gbi.drawImage(images[0], 0, 0, null);
-        gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OVER, 1.0f));
+        if (gbi.getComposite()==null){
+            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OVER, 1.0f));
+        }
 
         for (int i = 1; i < images.length; i++) {
             gbi.drawImage(images[i], 0, 0, null);
