@@ -82,7 +82,7 @@ public class OpacityTest {
 
     @Test
     /* Test het plakken van de volgende images over elkaar:
-     * "0 topografie_vmwin1345804276691.png": 24-bit RGB, tRNS: red = 251 green = 251 blue = 251, achtergrond luchtfoto
+     * "0 topografie.png": 24-bit RGB, tRNS: red = 251 green = 251 blue = 251, achtergrond
      * "4 services.png": 32-bit RGB+alpha overlay niet transparant, achtergrond wel
      * De "alpha" property van CombineImageUrl wordt gebruikt om overlay
      * transparant te maken
