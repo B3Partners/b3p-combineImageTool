@@ -21,10 +21,10 @@
  */
 package nl.b3p.imagetool;
 
-import java.awt.AlphaComposite;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.net.URL;
 import java.util.Stack;
+import javax.imageio.ImageIO;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
@@ -50,6 +50,7 @@ public class ImageCollector extends Thread {
     private BufferedImage bufferedImage;
     private static Stack stack = new Stack();
     private String url;
+    private URL realUrl;
     private Float alpha=null;
 
     public ImageCollector(String url, int maxResponseTime) {
@@ -59,6 +60,7 @@ public class ImageCollector extends Thread {
     }
     public ImageCollector(CombineImageUrl ciu, int maxResponseTime) {
         this.url = ciu.getUrl();
+        this.realUrl = ciu.getRealUrl();
         this.alpha= ciu.getAlpha();
         this.maxResponseTime=maxResponseTime;
         this.setMessage("Still downloading...");
@@ -74,21 +76,21 @@ public class ImageCollector extends Thread {
     }
 
     public void run() {
-        if (getUrl()!=null && getUrl().length()>0){            
+        if (getUrl()!=null && getUrl().length()>0 || realUrl != null){
             HttpClient client = new HttpClient();
             HttpMethod method = null;
             try {
-                method = new GetMethod(getUrl());
-                client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
-                int statusCode = client.executeMethod(method);
-                if (statusCode != HttpStatus.SC_OK) {
-                    throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
-                }
-                String mime = method.getResponseHeader("Content-Type").getValue();
-                setBufferedImage(ImageTool.readImage(method, mime));
-                if (alpha!=null && bufferedImage!=null){
-                    AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.DST_IN, alpha);
-                    ((Graphics2D)bufferedImage.getGraphics()).setComposite(ac);
+                if(realUrl != null) {
+                    setBufferedImage(ImageIO.read(realUrl));
+                } else {
+                    method = new GetMethod(getUrl());
+                    client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
+                    int statusCode = client.executeMethod(method);
+                    if (statusCode != HttpStatus.SC_OK) {
+                        throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
+                    }
+                    String mime = method.getResponseHeader("Content-Type").getValue();
+                    setBufferedImage(ImageTool.readImage(method, mime));
                 }
                 setMessage("");
                 setStatus(COMPLETED);

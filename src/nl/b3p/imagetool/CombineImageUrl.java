@@ -1,5 +1,6 @@
 package nl.b3p.imagetool;
 
+import java.net.URL;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -11,27 +12,35 @@ import org.apache.commons.logging.LogFactory;
 public class CombineImageUrl {
     private static final Log log = LogFactory.getLog(CombineImageSettings.class);
     private String url=null;
+    private URL realUrl;
     private Float alpha =null;
 
-    public CombineImageUrl(){}
-    public CombineImageUrl(String url, Float alpha){
+    public CombineImageUrl() {
+    }
+
+    public CombineImageUrl(String url, Float alpha) {
         setUrl(url);
         setAlpha(alpha);
     }
-    public CombineImageUrl(String u){
-        int alphaIndex=u.indexOf("#");
+
+    public CombineImageUrl(URL realUrl, Float alpha) {
+        setRealUrl(realUrl);
+        setAlpha(alpha);
+    }
+
+    public CombineImageUrl(String u) {
+        int alphaIndex=u.lastIndexOf("#");
         Float al=null;
-        String realUrl=u;
         if (alphaIndex > 0){
-            realUrl=u.substring(0, alphaIndex);
             try{
                 al=new Float(u.substring(alphaIndex+1,u.length()));
+                u=u.substring(0, alphaIndex);
             }catch(Exception e){
                 log.error("Fout bij parsen van Alpha: ",e);
                 al=null;
             }
         }
-        setUrl(realUrl);
+        setUrl(u);
         setAlpha(al);
     }
 
@@ -47,6 +56,14 @@ public class CombineImageUrl {
      */
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public URL getRealUrl() {
+        return realUrl;
+    }
+
+    public void setRealUrl(URL realUrl) {
+        this.realUrl = realUrl;
     }
 
     /**

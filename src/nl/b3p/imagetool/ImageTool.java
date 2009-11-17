@@ -42,8 +42,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriter;
@@ -189,7 +189,7 @@ public class ImageTool {
 
     }
     public static BufferedImage drawGeometries(BufferedImage bi,CombineImageSettings settings,int srid, Bbox bbox,int width,int height) throws Exception{
-        ArrayList wktGeoms=settings.getWktGeoms();
+        List wktGeoms=settings.getWktGeoms();
         if (wktGeoms==null || wktGeoms.size() <=0)
             return bi;
         //BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
@@ -294,6 +294,10 @@ public class ImageTool {
     }
     // </editor-fold>
 
+    public static BufferedImage combineImages(BufferedImage[] images, String mime) {
+        return combineImages(images, mime, null);
+    }
+
     /** Method which handles the combining of the images. This method redirects to the right method
      * for the different images, since not every image can be combined in the same way.
      *
@@ -303,11 +307,11 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineImages(BufferedImage [] images, String mime) method.">
-    public static BufferedImage combineImages(BufferedImage[] images, String mime) {
+    public static BufferedImage combineImages(BufferedImage[] images, String mime, Float alphas[]) {
         if (mime.equals(JPEG)) {
-            return combineJPGImages(images);
+            return combineJPGImages(images, alphas);
         } else {
-            return combineOtherImages(images);
+            return combineOtherImages(images, alphas);
         }
     }
     // </editor-fold>
@@ -320,7 +324,7 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineJPGImages(BufferedImage [] images) method.">
-    private static BufferedImage combineJPGImages(BufferedImage[] images) {
+    private static BufferedImage combineJPGImages(BufferedImage[] images, Float alphas[]) {
         int width = images[0].getWidth();
         int height = images[0].getHeight();
 
@@ -329,6 +333,11 @@ public class ImageTool {
         gbi.drawImage(images[0], 0, 0, null);
 
         for (int i = 1; i < images.length; i++) {
+            if(alphas != null && alphas[i] != null) {
+                gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
+            } else {
+                gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            }
             gbi.drawImage(images[i], 0, 0, null);
         }
         return newBufIm;
@@ -343,7 +352,7 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineOtherImages(BufferedImage [] images) method.">
-    private static BufferedImage combineOtherImages(BufferedImage[] images) {
+    private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas) {
         int width = images[0].getWidth();
         int height = images[0].getHeight();
 
@@ -351,11 +360,13 @@ public class ImageTool {
         Graphics2D gbi = newBufIm.createGraphics();
 
         gbi.drawImage(images[0], 0, 0, null);
-        if (gbi.getComposite()==null){
-            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OVER, 1.0f));
-        }
 
         for (int i = 1; i < images.length; i++) {
+            if(alphas != null && alphas[i] != null) {
+                gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
+            } else {
+                gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            }
             gbi.drawImage(images[i], 0, 0, null);
         }
         return newBufIm;

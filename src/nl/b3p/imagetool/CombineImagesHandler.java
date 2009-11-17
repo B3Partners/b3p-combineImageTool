@@ -2,7 +2,7 @@ package nl.b3p.imagetool;
 
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,7 +26,7 @@ public class CombineImagesHandler{
              /**herbereken de bbox van de urls en gebruik die urls om het plaatje te maken. Als er geen
              * als er geen urls kunnen/hoeven worden berekend gebruik dan de ingegeven urls
              */
-            ArrayList urls =settings.getCalculatedUrls();
+            List urls =settings.getCalculatedUrls();
             if (urls==null){
                 urls=settings.getUrls();
             }
@@ -43,9 +43,23 @@ public class CombineImagesHandler{
             }catch(Exception e){
                 throw e;
             }
+
+            Float[] alphas = null;
+
+            for(int i = 0; i < urls.size(); i++) {
+                CombineImageUrl ciu = (CombineImageUrl)urls.get(i);
+                if(ciu.getAlpha() != null) {
+                    if(alphas == null) {
+                        alphas = new Float[urls.size()];
+                    }
+                    alphas[i] = ciu.getAlpha();
+                }
+            }
+            
             BufferedImage returnImage=null;
             //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
-            BufferedImage combinedImages= ImageTool.combineImages(bi,returnMime);
+            BufferedImage combinedImages= ImageTool.combineImages(bi,returnMime, alphas);
+
             try{
                 if(settings.getWktGeoms()!=null){
                    returnImage=ImageTool.drawGeometries(combinedImages, settings);

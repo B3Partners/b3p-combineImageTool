@@ -24,6 +24,7 @@ package nl.b3p.imagetool;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,9 +35,9 @@ import org.apache.commons.logging.LogFactory;
 public class ImageManager {
 
     private final Log log = LogFactory.getLog(this.getClass());
-    private ArrayList ics = new ArrayList();
+    private List ics = new ArrayList();
     private int maxResponseTime=10000;
-    public ImageManager(ArrayList urls, int maxResponseTime) {
+    public ImageManager(List urls, int maxResponseTime) {
         this.maxResponseTime=maxResponseTime;
         if (urls==null || urls.size()<=0) {
             return;
@@ -76,7 +77,7 @@ public class ImageManager {
     public BufferedImage[] getCombinedImages() throws Exception {
         ImageCollector ic = null;
         Iterator it = ics.iterator();
-        ArrayList allImages = new ArrayList();
+        List allImages = new ArrayList();
         while (it.hasNext()) {
             ic = (ImageCollector) it.next();
             int status = ic.getStatus();

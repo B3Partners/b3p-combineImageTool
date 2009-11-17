@@ -6,6 +6,7 @@ package nl.b3p.imagetool;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -16,8 +17,8 @@ import org.apache.commons.logging.LogFactory;
 public class CombineImageSettings {
 
     private static final Log log = LogFactory.getLog(CombineImageSettings.class);
-    private ArrayList urls = null;
-    private ArrayList wktGeoms = null;
+    private List urls = null;
+    private List wktGeoms = null;
     private Bbox bbox = null;
     private Integer srid = 28992;
     private Integer width = null;
@@ -154,7 +155,7 @@ public class CombineImageSettings {
     /**
      * Calculate the urls in the combineImageSettings.
      */
-    public ArrayList getCalculatedUrls(){
+    public List getCalculatedUrls(){
         return getCalculatedUrls(urls);
     }
     /**
@@ -162,8 +163,8 @@ public class CombineImageSettings {
      * En de juiste Width en Height van de settings
      * Tot nu alleen WMS urls ondersteund
      */
-    public ArrayList getCalculatedUrls(ArrayList oldList){
-        ArrayList returnValue=new ArrayList();
+    public List getCalculatedUrls(List oldList){
+        List returnValue=new ArrayList();
         if (bbox == null || width == null || height == null) {
             //log.info("Not all settings set (width,height and bbox must be set to recalculate). Return original urls");
             return oldList;
@@ -226,7 +227,7 @@ public class CombineImageSettings {
         return newBbox;
     }
 
-    public ArrayList getUrls() {
+    public List getUrls() {
         return urls;
     }
 
@@ -238,11 +239,11 @@ public class CombineImageSettings {
         }
     }
 
-    public void setUrls(ArrayList urls) {
+    public void setUrls(List urls) {
         this.urls = urls;
     }
 
-    public ArrayList getWktGeoms() {
+    public List getWktGeoms() {
         return wktGeoms;
     }
 
