@@ -86,4 +86,15 @@ public class CombineImageUrl {
         }
         this.alpha = alpha;
     }
+
+    public String toString(){
+        String returnValue="";
+        if (url!=null){
+            returnValue+=url+" ";
+        }
+        if (alpha!=null){
+            returnValue+="("+alpha+")";
+        }
+        return returnValue;
+    }
 }
