@@ -193,9 +193,12 @@ public class ImageTool {
         if (wktGeoms==null || wktGeoms.size() <=0)
             return bi;
         //BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
-        Graphics2D gbi = bi.createGraphics();
-        gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+        //Graphics2D gbi = bi.createGraphics();
+        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D gbi = newBufIm.createGraphics();
+        gbi.drawImage(bi, 0, 0, null);
         for (int i=0; i < wktGeoms.size(); i++){
+            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
             CombineImageWkt ciw= (CombineImageWkt) wktGeoms.get(i);
             Color color=settings.getDefaultWktGeomColor();
             if (ciw.getColor()!=null)
@@ -222,7 +225,7 @@ public class ImageTool {
             }
         }        
         gbi.dispose();
-        return bi;
+        return newBufIm;
     }
     private static Point calculateCenter(Shape shape, int srid, Bbox bbox, int width, int height) throws Exception {
         Point centerPoint = new Point();
