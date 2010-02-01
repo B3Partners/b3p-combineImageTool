@@ -17,8 +17,8 @@ import org.apache.commons.logging.LogFactory;
 public class CombineImageSettings {
 
     private static final Log log = LogFactory.getLog(CombineImageSettings.class);
-    private List urls = null;
-    private List wktGeoms = null;
+    private List<CombineImageUrl> urls = null;
+    private List<CombineImageWkt> wktGeoms = null;
     private Bbox bbox = null;
     private Integer srid = 28992;
     private Integer width = null;
@@ -239,7 +239,7 @@ public class CombineImageSettings {
         }
     }
 
-    public void setUrls(List urls) {
+    public void setUrls(List<CombineImageUrl> urls) {
         this.urls = urls;
     }
 
@@ -247,7 +247,7 @@ public class CombineImageSettings {
         return wktGeoms;
     }
 
-    public void setWktGeoms(ArrayList wktGeoms) {
+    public void setWktGeoms(List<CombineImageWkt> wktGeoms) {
         this.wktGeoms = wktGeoms;
     }
     public void setWktGeoms(String[] wktGeoms){
