@@ -139,7 +139,7 @@ public class CombineImagesServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private static CombineImageSettings getCombineImageSettings(HttpServletRequest request) throws ServletException {
+    public static CombineImageSettings getCombineImageSettings(HttpServletRequest request) throws ServletException {
         String url = FormUtils.nullIfEmpty(request.getParameter("urls"));
         String wkt = FormUtils.nullIfEmpty(request.getParameter("wkts"));
         CombineImageSettings settings = new CombineImageSettings();
