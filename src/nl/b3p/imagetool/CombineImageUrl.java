@@ -33,12 +33,13 @@ public class CombineImageUrl {
         Float al=null;
         if (alphaIndex > 0){
             try{
-                al=new Float(u.substring(alphaIndex+1,u.length()));
-                u=u.substring(0, alphaIndex);
+                if (alphaIndex+1!=u.length())
+                    al=new Float(u.substring(alphaIndex+1,u.length()));
             }catch(Exception e){
                 log.error("Fout bij parsen van Alpha: ",e);
                 al=null;
             }
+            u=u.substring(0, alphaIndex);
         }
         setUrl(u);
         setAlpha(al);

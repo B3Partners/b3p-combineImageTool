@@ -360,7 +360,7 @@ public class CombineImageSettings {
      * Haalt de bbox van de meegegeven url op (of null als die er niet is)
      */
     public Bbox getBboxFromUrl(CombineImageUrl ciu) {
-        if (ciu != null && ciu.getUrl()!=null) {
+        if (ciu == null || ciu.getUrl()==null) {
             return null;
         }
         double[] bb = null;
@@ -400,7 +400,7 @@ public class CombineImageSettings {
     }
 
     public Integer[] getWidthAndHeightFromUrl(CombineImageUrl ciu) {
-        if (ciu != null && ciu.getUrl()!=null) {
+        if (ciu == null || ciu.getUrl()==null) {
             return null;
         }
         String url=ciu.getUrl();
