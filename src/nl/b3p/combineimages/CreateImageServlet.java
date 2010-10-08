@@ -39,8 +39,13 @@ public class CreateImageServlet extends HttpServlet {
             if (imageId!=null && request.getSession().getAttribute(imageId)!=null){
                 CombineImageSettings settings = (CombineImageSettings) request.getSession().getAttribute(imageId);
                 response.setContentType(settings.getMimeType());
-                response.setDateHeader("Expires", System.currentTimeMillis() + (1000 * 60 * 60 * 24));                
-                request.getSession().removeAttribute(imageId);
+                response.setDateHeader("Expires", System.currentTimeMillis() + (1000 * 60 * 60 * 24));
+
+                String keepAlive = request.getParameter("keepAlive");
+                if (keepAlive==null || keepAlive.length()==0) {
+                    request.getSession().removeAttribute(imageId);
+                }
+                
                 CombineImagesHandler.combineImage(response.getOutputStream(), settings,settings.getMimeType(),maxResponseTime);
             }
         } catch (Exception e) {

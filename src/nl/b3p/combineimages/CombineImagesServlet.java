@@ -97,6 +97,9 @@ public class CombineImagesServlet extends HttpServlet {
         long now = (new Date()).getTime();
         String val1 = Long.toString(now, Character.MAX_RADIX).toUpperCase();
         // random nummer er aanplakken om zeker te zijn van unieke code
+        if (rg==null) {
+            rg = new Random();
+        }
         long rnum = (long) rg.nextInt(1000);
         String val2 = Long.toString(rnum, Character.MAX_RADIX).toUpperCase();
         String thePath = "";
