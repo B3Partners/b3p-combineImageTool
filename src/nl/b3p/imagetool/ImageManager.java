@@ -36,19 +36,24 @@ public class ImageManager {
 
     private final Log log = LogFactory.getLog(this.getClass());
     private List ics = new ArrayList();
-    private int maxResponseTime=10000;
+    private int maxResponseTime = 10000;
+
     public ImageManager(List urls, int maxResponseTime) {
-        this.maxResponseTime=maxResponseTime;
-        if (urls==null || urls.size()<=0) {
+        this(urls, maxResponseTime, null, null);
+    }
+
+    public ImageManager(List urls, int maxResponseTime, String uname, String pw) {
+        this.maxResponseTime = maxResponseTime;
+        if (urls == null || urls.size() <= 0) {
             return;
         }
-        for (int i=0; i < urls.size(); i++){
+        for (int i = 0; i < urls.size(); i++) {
             Object o = urls.get(i);
-            ImageCollector ic=null;
-            if (o instanceof String){
-                ic = new ImageCollector((String)o,maxResponseTime);
-            }else if (o instanceof CombineImageUrl){
-                ic= new ImageCollector((CombineImageUrl)o, maxResponseTime);
+            ImageCollector ic = null;
+            if (o instanceof String) {
+                ic = new ImageCollector((String) o, maxResponseTime);
+            } else if (o instanceof CombineImageUrl) {
+                ic = new ImageCollector((CombineImageUrl) o, maxResponseTime, uname, pw);
             }
             ics.add(ic);
         }
@@ -58,7 +63,7 @@ public class ImageManager {
 
         // Hier worden de threads gestart
         ImageCollector ic = null;
-        for(int i=0; i < ics.size(); i++) {
+        for (int i = 0; i < ics.size(); i++) {
             ic = (ImageCollector) ics.get(i);
             if (ic.getStatus() == ImageCollector.NEW) {
                 ic.processNew();
@@ -66,7 +71,7 @@ public class ImageManager {
         }
 
         // Hier wordt op de threads gewacht tot ze klaar zijn.
-        for (int i=0; i < ics.size(); i++) {
+        for (int i = 0; i < ics.size(); i++) {
             ic = (ImageCollector) ics.get(i);
             if (ic.getStatus() == ImageCollector.ACTIVE) {//if (ic.isAlive()) { /
                 ic.processWaiting();
@@ -83,22 +88,22 @@ public class ImageManager {
             int status = ic.getStatus();
             if (status == ImageCollector.ERROR || ic.getBufferedImage() == null) {
                 log.error(ic.getMessage() + " (Status: " + status + ")");
-            }else if (status != ImageCollector.COMPLETED) {
+            } else if (status != ImageCollector.COMPLETED) {
                 // problem with one of sp's, but we continue with the rest!
                 log.error(ic.getMessage() + " (Status: " + status + ")");
-            }else{
+            } else {
                 allImages.add(ic.getBufferedImage());
             }
         }
-        if (allImages.size()>0){
-            BufferedImage[] bis= new BufferedImage[allImages.size()];
-            for (int i=0; i < allImages.size(); i++){
-                bis[i]=(BufferedImage)allImages.get(i);
+        if (allImages.size() > 0) {
+            BufferedImage[] bis = new BufferedImage[allImages.size()];
+            for (int i = 0; i < allImages.size(); i++) {
+                bis[i] = (BufferedImage) allImages.get(i);
             }
             return bis;
-            //return KBImageTool.combineImages(bis,KBImageTool.PNG);
-        }else
+        } else {
             return null;
+        }
 
     }
 }

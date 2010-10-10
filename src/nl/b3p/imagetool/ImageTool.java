@@ -78,55 +78,56 @@ public class ImageTool {
      */
     // <editor-fold defaultstate="" desc="readImage(GetMethod method, String mime) method.">
     public static BufferedImage readImage(HttpMethod method, String mime) throws Exception {
-        ImageReader ir=null;
-        BufferedImage i=null;
-        try{
-        if (mime.indexOf(";")!=-1){
-            mime=mime.substring(0,mime.indexOf(";"));
-        }
-        String mimeType = getMimeType(mime);
-        if (mimeType == null) {
-            log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
-            throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
-        }
-
-        ir = getReader(mimeType);
-        if (ir == null) {
-            log.error("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
-            throw new Exception("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
-        }
-        //TODO Make smarter.. Possibly faster... But keep reporting!
-        InputStream is = method.getResponseBodyAsStream();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int bytesRead = 0;
-        byte[] buffer= new byte[2048];
-        while (bytesRead!=-1){
-            bytesRead = is.read(buffer, 0, buffer.length);
-            if (bytesRead>0)
-                baos.write(buffer, 0, bytesRead);
-        }
-        ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        ir.setInput(stream, true);
-        i= ir.read(0);
-        //if image is a png, has no alpha and has a tRNS then make that color transparent.
-        if(!i.getColorModel().hasAlpha() && ir.getImageMetadata(0) instanceof PNGMetadata){
-            PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
-            if (metadata.tRNS_present) {
-                int alphaPix = (metadata.tRNS_red<<16)|(metadata.tRNS_green<<8)|(metadata.tRNS_blue);
-                BufferedImage tmp = new BufferedImage(i.getWidth(),i.getHeight(),
-                        BufferedImage.TYPE_INT_ARGB);
-                for(int x = 0; x < i.getWidth(); x++) {
-                    for(int y = 0; y < i.getHeight(); y++) {
-                        int rgb = i.getRGB(x, y);
-                        rgb = (rgb&0xFFFFFF)==alphaPix?alphaPix:rgb;
-                        tmp.setRGB(x, y, rgb);
-                    }
-                }
-                i = tmp;
+        ImageReader ir = null;
+        BufferedImage i = null;
+        try {
+            if (mime.indexOf(";") != -1) {
+                mime = mime.substring(0, mime.indexOf(";"));
             }
-        }
-        }finally{
-            if(ir!=null){
+            String mimeType = getMimeType(mime);
+            if (mimeType == null) {
+                log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
+                throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
+            }
+
+            ir = getReader(mimeType);
+            if (ir == null) {
+                log.error("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
+                throw new Exception("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
+            }
+            //TODO Make smarter.. Possibly faster... But keep reporting!
+            InputStream is = method.getResponseBodyAsStream();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int bytesRead = 0;
+            byte[] buffer = new byte[2048];
+            while (bytesRead != -1) {
+                bytesRead = is.read(buffer, 0, buffer.length);
+                if (bytesRead > 0) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+            }
+            ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
+            ir.setInput(stream, true);
+            i = ir.read(0);
+            //if image is a png, has no alpha and has a tRNS then make that color transparent.
+            if (!i.getColorModel().hasAlpha() && ir.getImageMetadata(0) instanceof PNGMetadata) {
+                PNGMetadata metadata = (PNGMetadata) ir.getImageMetadata(0);
+                if (metadata.tRNS_present) {
+                    int alphaPix = (metadata.tRNS_red << 16) | (metadata.tRNS_green << 8) | (metadata.tRNS_blue);
+                    BufferedImage tmp = new BufferedImage(i.getWidth(), i.getHeight(),
+                            BufferedImage.TYPE_INT_ARGB);
+                    for (int x = 0; x < i.getWidth(); x++) {
+                        for (int y = 0; y < i.getHeight(); y++) {
+                            int rgb = i.getRGB(x, y);
+                            rgb = (rgb & 0xFFFFFF) == alphaPix ? alphaPix : rgb;
+                            tmp.setRGB(x, y, rgb);
+                        }
+                    }
+                    i = tmp;
+                }
+            }
+        } finally {
+            if (ir != null) {
                 ir.dispose();
             }
         }
@@ -150,117 +151,124 @@ public class ImageTool {
             log.error("unsupported mime type: " + mime);
             throw new Exception("unsupported mime type: " + mime);
         }
-        
+
         if (mime.equals(TIFF)) {
-            writeTIFFImage(image,os);
+            writeTIFFImage(image, os);
         } else {
             writeOtherImage(image, os, mimeType.substring(mimeType.lastIndexOf("/") + 1));
         }
     }
 
-    public static BufferedImage drawGeometries(BufferedImage bi, CombineImageSettings settings) throws Exception{
-        int srid=28992;
-        if (settings.getSrid()!=null)
-            srid=((int) settings.getSrid());
-        int width=500;
-        int height=500;
-        if (settings.getWidth()!=null && settings.getHeight()!=null){
-            width=settings.getWidth();
-            height=settings.getHeight();
-        }else{
-            Integer[] hw=settings.getWidthAndHeightFromUrls();
-            if (hw!=null&&hw.length==2){
-                width=hw[0];
-                height=hw[1];
+    public static BufferedImage drawGeometries(BufferedImage bi, CombineImageSettings settings) throws Exception {
+        int srid = 28992;
+        if (settings.getSrid() != null) {
+            srid = ((int) settings.getSrid());
+        }
+        int width = 500;
+        int height = 500;
+        if (settings.getWidth() != null && settings.getHeight() != null) {
+            width = settings.getWidth();
+            height = settings.getHeight();
+        } else {
+            Integer[] hw = settings.getWidthAndHeightFromUrls();
+            if (hw != null && hw.length == 2) {
+                width = hw[0];
+                height = hw[1];
             }
         }
-        Bbox bbox=settings.getCalculatedBbox();
-        if (bbox==null){
-            bbox=settings.getBbox();
+        Bbox bbox = settings.getCalculatedBbox();
+        if (bbox == null) {
+            bbox = settings.getBbox();
         }
-        if (bbox==null){
-            bbox=settings.getBboxFromUrls();
+        if (bbox == null) {
+            bbox = settings.getBboxFromUrls();
         }
-        if (bbox==null){
+        if (bbox == null) {
             log.error("Geen bbox gevonden in een url of als parameter.");
-            throw new Exception ("Can't find bbox in settings or URL");
+            throw new Exception("Can't find bbox in settings or URL");
         }
-        return drawGeometries(bi,settings,srid,bbox,width,height);
+        return drawGeometries(bi, settings, srid, bbox, width, height);
 
     }
-    public static BufferedImage drawGeometries(BufferedImage bi,CombineImageSettings settings,int srid, Bbox bbox,int width,int height) throws Exception{
-        List wktGeoms=settings.getWktGeoms();
-        if (wktGeoms==null || wktGeoms.size() <=0)
+
+    public static BufferedImage drawGeometries(BufferedImage bi, CombineImageSettings settings, int srid, Bbox bbox, int width, int height) throws Exception {
+        List wktGeoms = settings.getWktGeoms();
+        if (wktGeoms == null || wktGeoms.size() <= 0) {
             return bi;
-        //BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
-        //Graphics2D gbi = bi.createGraphics();
-        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        }
+        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+//        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D gbi = newBufIm.createGraphics();
         gbi.drawImage(bi, 0, 0, null);
-        for (int i=0; i < wktGeoms.size(); i++){
+        for (int i = 0; i < wktGeoms.size(); i++) {
             gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
-            CombineImageWkt ciw= (CombineImageWkt) wktGeoms.get(i);
-            Color color=settings.getDefaultWktGeomColor();
-            if (ciw.getColor()!=null)
-                color= ciw.getColor();
+            CombineImageWkt ciw = (CombineImageWkt) wktGeoms.get(i);
+            Color color = settings.getDefaultWktGeomColor();
+            if (ciw.getColor() != null) {
+                color = ciw.getColor();
+            }
             gbi.setColor(color);
-            String wktGeom=ciw.getWktGeom();
+            String wktGeom = ciw.getWktGeom();
             Geometry geom = geometrieFromText(wktGeom, srid);
-            Shape shape=createImage(geom,srid,bbox,width,height);
-            Point centerPoint=null;
-            if (geom instanceof Polygon){
+            Shape shape = createImage(geom, srid, bbox, width, height);
+            Point centerPoint = null;
+            if (geom instanceof Polygon) {
                 gbi.fill(shape);
-            }else if (geom instanceof com.vividsolutions.jts.geom.Point){
-                centerPoint=calculateCenter(shape,srid,bbox,width,height);
-                gbi.draw(new Ellipse2D.Double(centerPoint.getX(),centerPoint.getY(),4,4));
-            }else{
+            } else if (geom instanceof com.vividsolutions.jts.geom.Point) {
+                centerPoint = calculateCenter(shape, srid, bbox, width, height);
+                gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 4, 4));
+            } else {
                 gbi.setStroke(new BasicStroke(3));
                 gbi.draw(shape);
             }
-            if(ciw.getLabel()!=null){
-                if (centerPoint==null)
-                    centerPoint=calculateCenter(shape,srid,bbox,width,height);
+            if (ciw.getLabel() != null) {
+                if (centerPoint == null) {
+                    centerPoint = calculateCenter(shape, srid, bbox, width, height);
+                }
                 gbi.setColor(Color.black);
-                gbi.drawString(ciw.getLabel(),(float)centerPoint.getX(),(float)centerPoint.getY());
+                gbi.drawString(ciw.getLabel(), (float) centerPoint.getX(), (float) centerPoint.getY());
             }
-        }        
+        }
         gbi.dispose();
         return newBufIm;
     }
+
     private static Point calculateCenter(Shape shape, int srid, Bbox bbox, int width, int height) throws Exception {
         Point centerPoint = new Point();
-        double x=shape.getBounds2D().getCenterX();
-        double y=shape.getBounds2D().getCenterY();
+        double x = shape.getBounds2D().getCenterX();
+        double y = shape.getBounds2D().getCenterY();
         centerPoint.setLocation(x, y);
-        centerPoint=transformToScreen(centerPoint,srid,bbox,width,height);
+        centerPoint = transformToScreen(centerPoint, srid, bbox, width, height);
         return centerPoint;
     }
-    public static Shape createImage(Geometry geometrie,int bboxSrid, Bbox bbox, int width, int height) throws Exception{
-        ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(),bbox.getMaxx(),bbox.getMiny(),bbox.getMaxy(),CRS.decode("EPSG:"+bboxSrid));
-        AffineTransform transform=RendererUtilities.worldToScreenTransform(re, new Rectangle(width,height));
-        LiteShape ls = new LiteShape(geometrie,transform,false);
+
+    public static Shape createImage(Geometry geometrie, int bboxSrid, Bbox bbox, int width, int height) throws Exception {
+        ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(), bbox.getMaxx(), bbox.getMiny(), bbox.getMaxy(), CRS.decode("EPSG:" + bboxSrid));
+        AffineTransform transform = RendererUtilities.worldToScreenTransform(re, new Rectangle(width, height));
+        LiteShape ls = new LiteShape(geometrie, transform, false);
         return ls;
     }
-    public static Point transformToScreen(Point source,int bboxSrid, Bbox bbox, int width, int height) throws Exception{
-        ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(),bbox.getMaxx(),bbox.getMiny(),bbox.getMaxy(),CRS.decode("EPSG:"+bboxSrid));
-        AffineTransform transform=RendererUtilities.worldToScreenTransform(re, new Rectangle(width,height));
+
+    public static Point transformToScreen(Point source, int bboxSrid, Bbox bbox, int width, int height) throws Exception {
+        ReferencedEnvelope re = new ReferencedEnvelope(bbox.getMinx(), bbox.getMaxx(), bbox.getMiny(), bbox.getMaxy(), CRS.decode("EPSG:" + bboxSrid));
+        AffineTransform transform = RendererUtilities.worldToScreenTransform(re, new Rectangle(width, height));
         Point result = new Point();
         transform.transform(source, result);
         return result;
     }
-    public static Geometry geometrieFromText(String wktgeom,int srid){
+
+    public static Geometry geometrieFromText(String wktgeom, int srid) {
         WKTReader wktreader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
         try {
-            Geometry geom =wktreader.read(wktgeom);
+            Geometry geom = wktreader.read(wktgeom);
             return geom;
         } catch (ParseException p) {
-            log.error("Can't create geomtry from wkt: "+wktgeom,p);
+            log.error("Can't create geomtry from wkt: " + wktgeom, p);
         }
         return null;
     }
 
     // </editor-fold>
-
     /** Writes a TIFF image to the outputstream.
      *
      * @param bufferedImage BufferedImage created from the given images.
@@ -336,7 +344,7 @@ public class ImageTool {
         gbi.drawImage(images[0], 0, 0, null);
 
         for (int i = 1; i < images.length; i++) {
-            if(alphas != null && alphas[i] != null) {
+            if (alphas != null && alphas[i] != null) {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
             } else {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
@@ -365,7 +373,7 @@ public class ImageTool {
         gbi.drawImage(images[0], 0, 0, null);
 
         for (int i = 1; i < images.length; i++) {
-            if(alphas != null && alphas[i] != null) {
+            if (alphas != null && alphas[i] != null) {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
             } else {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
@@ -526,11 +534,11 @@ public class ImageTool {
     /**
      *
      */
-    public static BufferedImage changeColor(BufferedImage im, Color color,Color newColor){
-        for (int x=0; x < im.getWidth(); x++){
-            for (int y=0; y < im.getHeight(); y++){
-                if (im.getRGB(x, y) == color.getRGB()){
-                    im.setRGB(x,y,newColor.getRGB());
+    public static BufferedImage changeColor(BufferedImage im, Color color, Color newColor) {
+        for (int x = 0; x < im.getWidth(); x++) {
+            for (int y = 0; y < im.getHeight(); y++) {
+                if (im.getRGB(x, y) == color.getRGB()) {
+                    im.setRGB(x, y, newColor.getRGB());
                 }
             }
         }

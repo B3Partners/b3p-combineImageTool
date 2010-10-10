@@ -25,13 +25,15 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.Stack;
 import javax.imageio.ImageIO;
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 
 /**
  * ImageCollector definition:
@@ -48,27 +50,35 @@ public class ImageCollector extends Thread {
     private int status = NEW;
     private String message = null;
     private BufferedImage bufferedImage;
-    private static Stack stack = new Stack();
+    private static final String host = AuthScope.ANY_HOST;
+    private static final int port = AuthScope.ANY_PORT;
+    private String username = null;
+    private String password = null;
     private String url;
     private URL realUrl;
-    private Float alpha=null;
-
+ 
     public ImageCollector(String url, int maxResponseTime) {
         this.url = url;
-        this.maxResponseTime=maxResponseTime;
+        this.maxResponseTime = maxResponseTime;
         this.setMessage("Still downloading...");
     }
+
     public ImageCollector(CombineImageUrl ciu, int maxResponseTime) {
         this.url = ciu.getUrl();
         this.realUrl = ciu.getRealUrl();
-        this.alpha= ciu.getAlpha();
-        this.maxResponseTime=maxResponseTime;
+        this.maxResponseTime = maxResponseTime;
         this.setMessage("Still downloading...");
+    }
+
+    public ImageCollector(CombineImageUrl ciu, int maxResponseTime, String uname, String pw) {
+        this(ciu, maxResponseTime);
+        this.username = uname;
+        this.password = pw;
     }
 
     public void processNew() throws InterruptedException {
         status = ACTIVE;
-        start();        
+        start();
     }
 
     public void processWaiting() throws InterruptedException {
@@ -76,30 +86,45 @@ public class ImageCollector extends Thread {
     }
 
     public void run() {
-        if (getUrl()!=null && getUrl().length()>0 || realUrl != null){
-            HttpClient client = new HttpClient();
-            HttpMethod method = null;
-            try {
-                if(realUrl != null) {
-                    setBufferedImage(ImageIO.read(realUrl));
-                } else {
-                    method = new GetMethod(getUrl());
-                    client.getHttpConnectionManager().getParams().setConnectionTimeout(maxResponseTime);
-                    int statusCode = client.executeMethod(method);
-                    if (statusCode != HttpStatus.SC_OK) {
-                        throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
-                    }
-                    String mime = method.getResponseHeader("Content-Type").getValue();
-                    setBufferedImage(ImageTool.readImage(method, mime));
+        if ((getUrl() == null || getUrl().length() == 0) && realUrl == null) {
+            return;
+        }
+
+        HttpMethod method = null;
+        try {
+            if (realUrl != null) {
+                setBufferedImage(ImageIO.read(realUrl));
+            } else {
+
+                HttpClient client = new HttpClient();
+                client.getHttpConnectionManager().
+                        getParams().setConnectionTimeout(maxResponseTime);
+
+                if (username != null && password != null) {
+                    client.getParams().setAuthenticationPreemptive(true);
+                    Credentials defaultcreds = new UsernamePasswordCredentials(username, password);
+                    AuthScope authScope = new AuthScope(host, port);
+                    client.getState().setCredentials(authScope, defaultcreds);
                 }
-                setMessage("");
-                setStatus(COMPLETED);
-            } catch (Exception ex) {
-                log.error("error callimage collector: ", ex);
-                setStatus(ERROR);
-            } finally {
-                if (method!=null)
-                    method.releaseConnection();
+                method = new GetMethod(getUrl());
+
+                int statusCode = client.executeMethod(method);
+                if (statusCode != HttpStatus.SC_OK) {
+                    throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
+                }
+
+                String mime = method.getResponseHeader("Content-Type").getValue();
+                setBufferedImage(ImageTool.readImage(method, mime));
+
+            }
+            setMessage("");
+            setStatus(COMPLETED);
+        } catch (Exception ex) {
+            log.error("error callimage collector: ", ex);
+            setStatus(ERROR);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
             }
         }
     }
@@ -115,7 +140,7 @@ public class ImageCollector extends Thread {
      * @param url the url to set
      */
     public void setUrl(String url) {
-        this.url = url;        
+        this.url = url;
     }
 
     public BufferedImage getBufferedImage() {
@@ -141,6 +166,4 @@ public class ImageCollector extends Thread {
     public void setMessage(String message) {
         this.message = message;
     }
-
-
 }
