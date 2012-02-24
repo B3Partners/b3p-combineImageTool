@@ -85,6 +85,13 @@ public class ImageTool {
                 mime = mime.substring(0, mime.indexOf(";"));
             }
             String mimeType = getMimeType(mime);
+            
+            /* TODO: Kijken waarom er geen mime type meer binnenkomt. Wellicht door de 
+             * HttpClient vernieuwing in kaartenbalie ? */
+            if (mimeType == null) {
+                mimeType = "image/png";
+            }
+            
             if (mimeType == null) {
                 log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
                 throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
