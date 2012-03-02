@@ -25,6 +25,12 @@ public class CombineImageSettings {
     private Integer height = null;
     private Color defaultWktGeomColor= Color.RED;
     private String mimeType="image/png";
+    
+    // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
+    private String tilingBbox = null;
+    private String tilingResolutions = null;
+    private String tilingTileSize = null;
+    private String tilingServiceUrl = null;    
 
     /**
      * @return the wktGeomColor
@@ -419,5 +425,37 @@ public class CombineImageSettings {
             }
         }
         return result;
-    }    
+    }
+
+    public String getTilingBbox() {
+        return tilingBbox;
+    }
+
+    public void setTilingBbox(String tilingBbox) {
+        this.tilingBbox = tilingBbox;
+    }
+
+    public String getTilingServiceUrl() {
+        return tilingServiceUrl;
+    }
+
+    public void setTilingServiceUrl(String tilingServiceUrl) {
+        this.tilingServiceUrl = tilingServiceUrl;
+    }
+
+    public String getTilingTileSize() {
+        return tilingTileSize;
+    }
+
+    public void setTilingTileSize(String tilingTileSize) {
+        this.tilingTileSize = tilingTileSize;
+    }
+
+    public String getTilingResolutions() {
+        return tilingResolutions;
+    }
+
+    public void setTilingResolutions(String tilingResolutions) {
+        this.tilingResolutions = tilingResolutions;
+    }
 }
