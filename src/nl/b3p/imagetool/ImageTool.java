@@ -374,7 +374,13 @@ public class ImageTool {
         int width = images[0].getWidth();
         int height = images[0].getHeight();
 
+        // BufferedImage.getRaster().setRect(x, y, BufferedImage.getData());
+        
         BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+        
+        // Graphics2D g2 = (Graphics2D)g;      
+        //g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        
         Graphics2D gbi = newBufIm.createGraphics();
 
         gbi.drawImage(images[0], 0, 0, null);

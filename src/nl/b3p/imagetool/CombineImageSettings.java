@@ -29,7 +29,8 @@ public class CombineImageSettings {
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
     private String tilingBbox = null;
     private String tilingResolutions = null;
-    private String tilingTileSize = null;
+    private Integer tilingTileWidth = null;
+    private Integer tilingTileHeight = null;
     private String tilingServiceUrl = null;    
 
     /**
@@ -443,12 +444,20 @@ public class CombineImageSettings {
         this.tilingServiceUrl = tilingServiceUrl;
     }
 
-    public String getTilingTileSize() {
-        return tilingTileSize;
+    public Integer getTilingTileHeight() {
+        return tilingTileHeight;
     }
 
-    public void setTilingTileSize(String tilingTileSize) {
-        this.tilingTileSize = tilingTileSize;
+    public void setTilingTileHeight(Integer tilingTileHeight) {
+        this.tilingTileHeight = tilingTileHeight;
+    }
+
+    public Integer getTilingTileWidth() {
+        return tilingTileWidth;
+    }
+
+    public void setTilingTileWidth(Integer tilingTileWidth) {
+        this.tilingTileWidth = tilingTileWidth;
     }
 
     public String getTilingResolutions() {
