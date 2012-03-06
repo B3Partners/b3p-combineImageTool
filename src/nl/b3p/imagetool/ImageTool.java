@@ -375,15 +375,16 @@ public class ImageTool {
         int width = 0;
         int height = 0;
         
-        for (TileImage tileImage : tilingImages) {
-            log.debug("X: " + tileImage.getPosX() + " Y: " + tileImage.getPosY());
-        }
-        
+        /* Als er geen tiling layer aanstaat dan width en height van eerste plaatje
+         * pakken. Deze is voor alle gewone wms'en hetzelfde */
         if (tilingImages == null || tilingImages.size() < 1) {
             width = images[0].getWidth();
             height = images[0].getHeight();
         }
         
+        /* Als er wel een tiling layer aanstaat dan width en height van eerste
+         * TileImage object pakken. Dit is de breedte en hoogte van de map
+         * opgevraagd aan Flamingo */
         if (tilingImages != null && tilingImages.size() > 0) {
             TileImage tile = tilingImages.get(0);
             
@@ -398,6 +399,8 @@ public class ImageTool {
 
         Integer numberOfTiles = 0;
         
+        /* Deze code gaat er dus van uit de alle tiling images als eerste in 
+         * images[] zitten */
         if (tilingImages != null && tilingImages.size() > 0) {
             numberOfTiles = tilingImages.size();
             
@@ -414,6 +417,8 @@ public class ImageTool {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
             }            
             
+            /* Als we tiling images combinen gebruiken we hiervoor dus de
+             * x, y, width en height die in het TileImage object zit */
             if (tilingImages != null && tilingImages.size() > 0 && i < numberOfTiles) {
                 TileImage tile = tilingImages.get(i);
                 gbi.drawImage(images[i], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);

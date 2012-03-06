@@ -94,19 +94,17 @@ public class CombineImagesHandler {
             }
         }
         
-        /* Deze later hergebruiken voor berekeing tile positie */        
+        /* Deze later hergebruiken voor berekening tile positie */        
         Integer mapWidth = null;
-        Integer mapHeight = null;
-        
+        Integer mapHeight = null;        
         if (settings.getWidth() != null) {
             mapWidth = settings.getWidth();
-        }
-        
+        }        
         if (settings.getHeight() != null) {
             mapHeight = settings.getHeight();
         }
         
-        /* 3) Berekenen tiles in mapunits */
+        /* 3) Berekenen grote van tiles in mapunits */
         Double tileWidthMapUnits = null;
         Double tileHeightMapUnits = null;        
         if (settings.getTilingTileWidth() != null && useRes != null) {
@@ -116,20 +114,22 @@ public class CombineImagesHandler {
             tileHeightMapUnits = settings.getTilingTileWidth() * useRes;
         }
         
-        /* 4) Berekenen benodigde tiles */
+        /* 4) Berekenen benodigde tile indexen */
         Integer minTileIndexX = null;
         Integer maxTileIndexX = null;
         Integer minTileIndexY = null;
         Integer maxTileIndexY = null;        
         if (tileWidthMapUnits != null && tileWidthMapUnits > 0 
-                && tileHeightMapUnits != null && tileHeightMapUnits > 0) {            
+                && tileHeightMapUnits != null && tileHeightMapUnits > 0) {  
+            
             minTileIndexX = getTilingCoord(serviceBbox.getMinX(), serviceBbox.getMaxX(), tileWidthMapUnits, requestBbox.getMinX());
             maxTileIndexX = getTilingCoord(serviceBbox.getMinX(), serviceBbox.getMaxX(), tileWidthMapUnits, requestBbox.getMaxX());
             minTileIndexY = getTilingCoord(serviceBbox.getMinY(), serviceBbox.getMaxY(), tileHeightMapUnits, requestBbox.getMinY());
             maxTileIndexY = getTilingCoord(serviceBbox.getMinY(), serviceBbox.getMaxY(), tileHeightMapUnits, requestBbox.getMaxY());            
         }
         
-        /* 5) Maken tile urls */
+        /* 5) Opbouwen nieuwe tile url en per url ook x,y positie van tile bepalen 
+         zodat drawImage deze op de juiste plek kan zetten */
         for (int ix = minTileIndexX; ix <= maxTileIndexX; ix++) {
             for (int iy = minTileIndexY; iy <= maxTileIndexY; iy++) {
                 double[] bbox = new double[4];
@@ -139,7 +139,7 @@ public class CombineImagesHandler {
                 bbox[2] = bbox[0] + tileWidthMapUnits;                
                 bbox[3] = bbox[1] + tileHeightMapUnits;
                 
-                Bbox tileBbox = new Bbox(bbox[0], bbox[1], bbox[2], bbox[3]);
+                Bbox tileBbox = new Bbox(bbox[0], bbox[1], bbox[2], bbox[3]);                
                 
                 TileImage tile = calcTilePosition(mapWidth, mapHeight, tileBbox, requestBbox, ix, iy);               
                  
@@ -160,12 +160,8 @@ public class CombineImagesHandler {
                 tile.setCombineImageUrl(url);
                 
                 tileImages.add(tile);
-                
-                log.debug("TILE IMAGE REQUEST: " + newUrl);
             }            
         }
-        
-        /* 6) Berekenen waar tiles geplaatst moeten worden */
         
         return tileImages;
     }
@@ -231,6 +227,9 @@ public class CombineImagesHandler {
             normalUrls = settings.getUrls();
         }
         
+        /* NOTE: Opletten dat de tiling combined images urls pas na de normale urls
+         * worden toegeveoegd aan de List zodat deze als eerste inde buffered images
+         * komen */
         List urls = new ArrayList();
         if (tilingImages != null && tilingImages.size() > 0) {
             for (TileImage tileImage : tilingImages) {
