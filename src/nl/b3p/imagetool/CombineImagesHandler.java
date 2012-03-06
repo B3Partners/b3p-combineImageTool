@@ -27,7 +27,7 @@ public class CombineImagesHandler {
         combineImage(out, settings, returnMime, maxResponseTime, null, null);
     }
     
-    public static List<TileImage> getTilingUrls(CombineImageSettings settings) 
+    public static List<TileImage> getTilingImages(CombineImageSettings settings) 
             throws MalformedURLException {
         
         List<TileImage> tileImages = new ArrayList();
@@ -41,10 +41,9 @@ public class CombineImagesHandler {
             Double requestMaxY = settings.getBbox().getMaxy();
             
             requestBbox = new Bbox(requestMinX, requestMinY, requestMaxX, requestMaxY);
-        }  
+        }
         
-        /* 1) Berekenen resolutie */        
-        Double res = null;        
+        /* Bbox van service */
         Bbox serviceBbox = null;        
         if (settings.getTilingBbox() != null) {
             String[] bbox = settings.getTilingBbox().split(",");
@@ -55,11 +54,15 @@ public class CombineImagesHandler {
             Double serviceMaxY = new Double(bbox[3]);
             
             serviceBbox = new Bbox(serviceMinX, serviceMinY, serviceMaxX, serviceMaxY);
-            
+        }
+        
+        /* 1) Berekenen resolutie */        
+        Double res = null;    
+        if (requestBbox != null) {            
             Integer mapWidth = settings.getWidth();
             
-            res = (serviceMaxX - serviceMinX) / mapWidth;
-        }         
+            res = (requestBbox.getMaxX() - requestBbox.getMinX()) / mapWidth;
+        }
             
         /* 2) Bekijk de service resoluties voor mogelijk resample tiles. Pak de
          eerstvolgende kleinere service resolutie */
@@ -91,20 +94,26 @@ public class CombineImagesHandler {
             }
         }
         
-        /* Deze later hergebruiken voor berekeing tile positie */
-        Integer tileWidth = null;
-        Integer tileHeight = null;
+        /* Deze later hergebruiken voor berekeing tile positie */        
+        Integer mapWidth = null;
+        Integer mapHeight = null;
+        
+        if (settings.getWidth() != null) {
+            mapWidth = settings.getWidth();
+        }
+        
+        if (settings.getHeight() != null) {
+            mapHeight = settings.getHeight();
+        }
         
         /* 3) Berekenen tiles in mapunits */
-        Long tileWidthMapUnits = null;
-        Long tileHeightMapUnits = null;        
+        Double tileWidthMapUnits = null;
+        Double tileHeightMapUnits = null;        
         if (settings.getTilingTileWidth() != null && useRes != null) {
-            tileWidthMapUnits = Math.round(settings.getTilingTileWidth() * useRes);
-            tileWidth = settings.getTilingTileWidth();
+            tileWidthMapUnits = settings.getTilingTileWidth() * useRes;
         }
         if (settings.getTilingTileHeight() != null && useRes != null) {
-            tileHeightMapUnits = Math.round(settings.getTilingTileWidth() * useRes);
-            tileHeight = settings.getTilingTileWidth();
+            tileHeightMapUnits = settings.getTilingTileWidth() * useRes;
         }
         
         /* 4) Berekenen benodigde tiles */
@@ -126,31 +135,33 @@ public class CombineImagesHandler {
                 double[] bbox = new double[4];
                 
                 bbox[0] = serviceBbox.getMinX() + (ix * tileWidthMapUnits);
-                bbox[1] = bbox[0] + tileWidthMapUnits;
-                bbox[2] = serviceBbox.getMinY() + (iy * tileHeightMapUnits);
-                bbox[3] = bbox[2] + tileHeightMapUnits;
+                bbox[1] = serviceBbox.getMinY() + (iy * tileHeightMapUnits);
+                bbox[2] = bbox[0] + tileWidthMapUnits;                
+                bbox[3] = bbox[1] + tileHeightMapUnits;
                 
                 Bbox tileBbox = new Bbox(bbox[0], bbox[1], bbox[2], bbox[3]);
                 
-                TileImage tile = calcTilePosition(tileWidth, tileHeight, tileBbox, requestBbox);
-                
-                // http://localhost:8084/kaartenbalie/services/e84fd9f44587683512f2c00ff36d243f?
-                // &SERVICE=WMS&VERSION=1.1.1&LAYERS=geoweblimprod_Luchtfoto&STYLES=
-                // &FORMAT=image/jpeg&SRS=EPSG:28992&SERVICE=WMS&REQUEST=GetMap
-                // &NAME=fmc49_49&WIDTH=256&HEIGHT=256&BBOX=210050.24,366662.08,223812.8,380424.64
-               
-                CombineImageUrl url = new CombineImageUrl();  
+                TileImage tile = calcTilePosition(mapWidth, mapHeight, tileBbox, requestBbox, ix, iy);               
+                 
                 String serviceUrl = settings.getTilingServiceUrl();
-                String bboxString = "&" + bbox[0] + "," + bbox[1] + "," + bbox[2] + "," + bbox[3];
-                String newUrl = serviceUrl + bboxString;
+                
+                String sizes = null;
+                if (settings.getTilingTileWidth() != null && settings.getTilingTileHeight() != null) {
+                    sizes = "&WIDTH=" + settings.getTilingTileWidth() + "&HEIGHT=" + settings.getTilingTileHeight();
+                }
+                
+                String bboxString = "&BBOX=" + tileBbox.getMinX() + "," + tileBbox.getMinY() + "," + tileBbox.getMaxX() + "," + tileBbox.getMaxY();
+                
+                String newUrl = serviceUrl + sizes + bboxString;
+                
+                CombineImageUrl url = new CombineImageUrl(); 
                 url.setUrl(newUrl);
                 url.setRealUrl(new URL(newUrl));
                 tile.setCombineImageUrl(url);
                 
                 tileImages.add(tile);
                 
-                log.debug("TILE BBOX: " + bboxString);
-                log.debug("TILE URL: " + newUrl);
+                log.debug("TILE IMAGE REQUEST: " + newUrl);
             }            
         }
         
@@ -159,31 +170,35 @@ public class CombineImagesHandler {
         return tileImages;
     }
     
-    public static TileImage calcTilePosition(Integer tileWidth, Integer tileHeight,
-            Bbox tileBbox, Bbox requestBbox) {
+    public static TileImage calcTilePosition(Integer mapWidth, Integer mapHeight,
+            Bbox tileBbox, Bbox requestBbox, int offsetX, int offsetY) {
         
         TileImage tile = new TileImage();
         
-        Double msx = (requestBbox.getMaxX() - requestBbox.getMinX()) / tileWidth;
-        Double msy = (requestBbox.getMaxY() - requestBbox.getMinY()) / tileHeight;
+        Double msx = (requestBbox.getMaxX() - requestBbox.getMinX()) / mapWidth;
+        Double msy = (requestBbox.getMaxY() - requestBbox.getMinY()) / mapHeight;
         
-        Double posX = (tileBbox.getMinX() - requestBbox.getMinX()) / msx;
-        Double posY = (requestBbox.getMaxY() - tileBbox.getMaxY()) / msy;
-        Long width = Math.round( (tileBbox.getMaxX() - tileBbox.getMinX()) / msx);
-        Long height = Math.round( (tileBbox.getMaxY() - tileBbox.getMinY()) / msy);
+        Double posX = Math.floor( (tileBbox.getMinX() - requestBbox.getMinX()) / msx );
+        Double posY = Math.floor( (requestBbox.getMaxY() - tileBbox.getMaxY()) / msy );
+        Double width = Math.floor( (tileBbox.getMaxX() - tileBbox.getMinX()) / msx );
+        Double height = Math.floor( (tileBbox.getMaxY() - tileBbox.getMinY()) / msy );
         
-        tile.setPosX(posX.intValue());
-        tile.setPosY(posY.intValue());
+        tile.setPosX(posX.intValue() - offsetX);
+        tile.setPosY(posY.intValue() + offsetY);
+        
         tile.setImageWidth(width.intValue());
         tile.setImageHeight(height.intValue());
+        
+        tile.setMapWidth(mapWidth);
+        tile.setMapHeight(mapHeight);
         
         return tile;
     }
     
     public static int getTilingCoord(Double serviceMin, Double serviceMax,
-            Long tileSizeMapUnits, Double coord) {
+            Double tileSizeMapUnits, Double coord) {
         
-        int epsilon = 5;        
+        double epsilon = 0.00000001;        
         Double tileIndex = 0.0;
         
         tileIndex = Math.floor( (coord - serviceMin) / (tileSizeMapUnits + epsilon) );
@@ -191,10 +206,10 @@ public class CombineImagesHandler {
         if (tileIndex < 0)
             tileIndex = 0.0;
         
-        Double maxBboxX = Math.floor( (serviceMax - serviceMin) / (tileSizeMapUnits + epsilon) );
+        Double maxBbox = Math.floor( (serviceMax - serviceMin) / (tileSizeMapUnits + epsilon) );
         
-        if (tileIndex > maxBboxX)
-            tileIndex = maxBboxX;
+        if (tileIndex > maxBbox)
+            tileIndex = maxBbox;
         
         return tileIndex.intValue();   
     }
@@ -205,7 +220,7 @@ public class CombineImagesHandler {
         /* Bereken url's voor tiles */
         List<TileImage> tilingImages = new ArrayList();
         if (settings.getTilingServiceUrl() != null) {            
-            tilingImages = getTilingUrls(settings);
+            tilingImages = getTilingImages(settings);
         }
         
         /**herbereken de bbox van de urls en gebruik die urls om het plaatje te maken. Als er geen
@@ -216,16 +231,16 @@ public class CombineImagesHandler {
             normalUrls = settings.getUrls();
         }
         
-        List urls = new ArrayList();        
-        if (normalUrls != null && normalUrls.size() > 0) {
-            urls.addAll(normalUrls);
-        }            
-        
+        List urls = new ArrayList();
         if (tilingImages != null && tilingImages.size() > 0) {
             for (TileImage tileImage : tilingImages) {
                 urls.add(tileImage.getCombineImageUrl());
             }
-        } 
+        }
+        
+        if (normalUrls != null && normalUrls.size() > 0) {
+            urls.addAll(normalUrls);
+        }
         
         if (urls.size() < 1) {
             throw new Exception("Geen verzoeken gevonden om te combineren.");
@@ -255,7 +270,7 @@ public class CombineImagesHandler {
 
         BufferedImage returnImage = null;
         //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
-        BufferedImage combinedImages = ImageTool.combineImages(bi, returnMime, alphas);
+        BufferedImage combinedImages = ImageTool.combineImages(bi, returnMime, alphas, tilingImages);
 
         try {
             if (settings.getWktGeoms() != null) {

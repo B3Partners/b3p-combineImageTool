@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
@@ -313,7 +314,7 @@ public class ImageTool {
     // </editor-fold>
 
     public static BufferedImage combineImages(BufferedImage[] images, String mime) {
-        return combineImages(images, mime, null);
+        return combineImages(images, mime, null, null);
     }
 
     /** Method which handles the combining of the images. This method redirects to the right method
@@ -325,11 +326,11 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineImages(BufferedImage [] images, String mime) method.">
-    public static BufferedImage combineImages(BufferedImage[] images, String mime, Float alphas[]) {
+    public static BufferedImage combineImages(BufferedImage[] images, String mime, Float alphas[], List<TileImage> tilingImages) {
         if (mime.equals(JPEG)) {
             return combineJPGImages(images, alphas);
         } else {
-            return combineOtherImages(images, alphas);
+            return combineOtherImages(images, alphas, tilingImages);
         }
     }
     // </editor-fold>
@@ -370,29 +371,57 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineOtherImages(BufferedImage [] images) method.">
-    private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas) {
-        int width = images[0].getWidth();
-        int height = images[0].getHeight();
-
-        // BufferedImage.getRaster().setRect(x, y, BufferedImage.getData());
+    private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas, List<TileImage> tilingImages) {
+        int width = 0;
+        int height = 0;
         
-        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+        for (TileImage tileImage : tilingImages) {
+            log.debug("X: " + tileImage.getPosX() + " Y: " + tileImage.getPosY());
+        }
         
-        // Graphics2D g2 = (Graphics2D)g;      
-        //g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        if (tilingImages == null || tilingImages.size() < 1) {
+            width = images[0].getWidth();
+            height = images[0].getHeight();
+        }
+        
+        if (tilingImages != null && tilingImages.size() > 0) {
+            TileImage tile = tilingImages.get(0);
+            
+            width = tile.getMapWidth();
+            height = tile.getMapHeight();
+        }
+        
+        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);        
         
         Graphics2D gbi = newBufIm.createGraphics();
+        gbi.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-        gbi.drawImage(images[0], 0, 0, null);
+        Integer numberOfTiles = 0;
+        
+        if (tilingImages != null && tilingImages.size() > 0) {
+            numberOfTiles = tilingImages.size();
+            
+            TileImage tile = tilingImages.get(0);
+            gbi.drawImage(images[0], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
+        } else {
+            gbi.drawImage(images[0], 0, 0, null);
+        }
 
         for (int i = 1; i < images.length; i++) {
             if (alphas != null && alphas[i] != null) {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
             } else {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-            }
-            gbi.drawImage(images[i], 0, 0, null);
+            }            
+            
+            if (tilingImages != null && tilingImages.size() > 0 && i < numberOfTiles) {
+                TileImage tile = tilingImages.get(i);
+                gbi.drawImage(images[i], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
+            } else {
+                gbi.drawImage(images[i], 0, 0, null);
+            }            
         }
+        
         return newBufIm;
     }
     // </editor-fold>

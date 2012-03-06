@@ -12,6 +12,9 @@ public class TileImage {
     private int imageHeight;
     
     private CombineImageUrl combineImageUrl;
+    
+    private int mapWidth;
+    private int mapHeight;
 
     public TileImage() {
     }
@@ -61,5 +64,21 @@ public class TileImage {
 
     public void setCombineImageUrl(CombineImageUrl combineImageUrl) {
         this.combineImageUrl = combineImageUrl;
+    }
+
+    public int getMapHeight() {
+        return mapHeight;
+    }
+
+    public void setMapHeight(int mapHeight) {
+        this.mapHeight = mapHeight;
+    }
+
+    public int getMapWidth() {
+        return mapWidth;
+    }
+
+    public void setMapWidth(int mapWidth) {
+        this.mapWidth = mapWidth;
     }
 }
