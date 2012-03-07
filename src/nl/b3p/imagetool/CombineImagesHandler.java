@@ -141,7 +141,7 @@ public class CombineImagesHandler {
                 
                 Bbox tileBbox = new Bbox(bbox[0], bbox[1], bbox[2], bbox[3]);                
                 
-                TileImage tile = calcTilePosition(mapWidth, mapHeight, tileBbox, requestBbox, ix, iy);               
+                TileImage tile = calcTilePosition(mapWidth, mapHeight, tileBbox, requestBbox);               
                  
                 String serviceUrl = settings.getTilingServiceUrl();
                 
@@ -167,20 +167,22 @@ public class CombineImagesHandler {
     }
     
     public static TileImage calcTilePosition(Integer mapWidth, Integer mapHeight,
-            Bbox tileBbox, Bbox requestBbox, int offsetX, int offsetY) {
+            Bbox tileBbox, Bbox requestBbox) {
         
         TileImage tile = new TileImage();
+        
+        double epsilon = 0.5;
         
         Double msx = (requestBbox.getMaxX() - requestBbox.getMinX()) / mapWidth;
         Double msy = (requestBbox.getMaxY() - requestBbox.getMinY()) / mapHeight;
         
-        Double posX = Math.floor( (tileBbox.getMinX() - requestBbox.getMinX()) / msx );
-        Double posY = Math.floor( (requestBbox.getMaxY() - tileBbox.getMaxY()) / msy );
-        Double width = Math.floor( (tileBbox.getMaxX() - tileBbox.getMinX()) / msx );
-        Double height = Math.floor( (tileBbox.getMaxY() - tileBbox.getMinY()) / msy );
+        Long posX = Math.round( (tileBbox.getMinX() - requestBbox.getMinX()) / msx );
+        Long posY = Math.round( (requestBbox.getMaxY() - tileBbox.getMaxY()) / msy );
+        Long width = Math.round( ( (tileBbox.getMaxX() - tileBbox.getMinX()) / msx) + epsilon );
+        Long height = Math.round( ( (tileBbox.getMaxY() - tileBbox.getMinY()) / msy) + epsilon );
         
-        tile.setPosX(posX.intValue() - offsetX);
-        tile.setPosY(posY.intValue() + offsetY);
+        tile.setPosX(posX.intValue());
+        tile.setPosY(posY.intValue());
         
         tile.setImageWidth(width.intValue());
         tile.setImageHeight(height.intValue());

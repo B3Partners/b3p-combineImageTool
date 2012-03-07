@@ -388,15 +388,16 @@ public class ImageTool {
         if (tilingImages != null && tilingImages.size() > 0) {
             TileImage tile = tilingImages.get(0);
             
-            width = tile.getMapWidth();
-            height = tile.getMapHeight();
+            width = tile.getMapWidth() -1;
+            height = tile.getMapHeight() -1;
         }
         
         BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);        
         
         Graphics2D gbi = newBufIm.createGraphics();
         gbi.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-
+        gbi.setBackground(Color.WHITE);
+        
         Integer numberOfTiles = 0;
         
         /* Deze code gaat er dus van uit de alle tiling images als eerste in 
