@@ -97,6 +97,8 @@ public class ImageTool {
                 log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
                 throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
             }
+            
+            log.debug("Getting image reader with mime type: " + mimeType);
 
             ir = getReader(mimeType);
             if (ir == null) {
