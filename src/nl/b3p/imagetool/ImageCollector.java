@@ -85,6 +85,7 @@ public class ImageCollector extends Thread {
         join(maxResponseTime);
     }
 
+    @Override
     public void run() {
         if ((getUrl() == null || getUrl().length() == 0) && realUrl == null) {
             return;

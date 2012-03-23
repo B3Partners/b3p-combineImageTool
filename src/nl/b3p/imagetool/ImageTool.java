@@ -89,7 +89,7 @@ public class ImageTool {
             
             /* TODO: Kijken waarom er geen mime type meer binnenkomt. Wellicht door de 
              * HttpClient vernieuwing in kaartenbalie ? */
-            if (mimeType == null) {
+            if (mimeType == null || mimeType.equals("")) {
                 mimeType = "image/png";
             }
             
