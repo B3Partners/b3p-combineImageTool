@@ -212,23 +212,35 @@ public class CombineImagesHandler {
         return tileIndex.intValue();   
     }
     
-    public static void combineImage(OutputStream out, CombineImageSettings settings, 
+    public static void combineImage(OutputStream out, CombineImageSettings settings,
             String returnMime, int maxResponseTime, String uname, String pw) throws Exception {
         
-        /* Bereken url's voor tiles */
-        List<TileImage> tilingImages = new ArrayList();
-        if (settings.getTilingServiceUrl() != null) {            
-            tilingImages = getTilingImages(settings);
-        }
-        
         /**herbereken de bbox van de urls en gebruik die urls om het plaatje te maken. Als er geen
-         * als er geen urls kunnen/hoeven worden berekend gebruik dan de ingegeven urls
+         * als er geen urls kunnen/hoeven worden berekend gebruik dan de ingegeven urls*/
+        BufferedImage returnImage = combineImage(settings, returnMime, maxResponseTime, uname, pw);
+        try {
+            ImageTool.writeImage(returnImage, returnMime, out);
+        } catch (Exception ex) {
+            log.error(ex);
+        }
+    }
+
+    public static BufferedImage combineImage(CombineImageSettings settings,
+            String returnMime, int maxResponseTime, String uname, String pw) throws Exception {
+        /**
+         * herbereken de bbox van de urls en gebruik die urls om het plaatje te
+         * maken. Als er geen als er geen urls kunnen/hoeven worden berekend
+         * gebruik dan de ingegeven urls
          */        
         List normalUrls = settings.getCalculatedUrls();
         if (normalUrls == null) {
             normalUrls = settings.getUrls();
         }
-        
+          /* Bereken url's voor tiles */
+        List<TileImage> tilingImages = new ArrayList();
+        if (settings.getTilingServiceUrl() != null) {            
+            tilingImages = getTilingImages(settings);
+        }
         /* NOTE: Opletten dat de tiling combined images urls pas na de normale urls
          * worden toegeveoegd aan de List zodat deze als eerste inde buffered images
          * komen */
@@ -283,10 +295,6 @@ public class CombineImagesHandler {
             log.error("Kan geometrien niet tekenen. Return image zonder alle geometrien: ", e);
             returnImage = combinedImages;
         }
-        try {
-            ImageTool.writeImage(returnImage, returnMime, out);
-        } catch (Exception ex) {
-            log.error(ex);
-        }
+        return returnImage;
     }
 }

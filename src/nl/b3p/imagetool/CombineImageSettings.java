@@ -326,7 +326,7 @@ public class CombineImageSettings {
      * @return de veranderde url
      *
      */
-    private static String changeParameter(String url, String key,String newValue) {
+    public static String changeParameter(String url, String key,String newValue) {
         String lowerUrl = url.toLowerCase();
         if (lowerUrl.indexOf("?" + key + "=") >= 0 || lowerUrl.indexOf("&" + key + "=") >= 0) {
             int beginIndex = 0;
