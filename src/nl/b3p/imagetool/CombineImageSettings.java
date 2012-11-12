@@ -6,7 +6,9 @@ package nl.b3p.imagetool;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -25,6 +27,8 @@ public class CombineImageSettings {
     private Integer height = null;
     private Color defaultWktGeomColor= Color.RED;
     private String mimeType="image/png";
+    
+    private Map legendMap = new HashMap();
     
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
     private String tilingBbox = null;
@@ -466,5 +470,13 @@ public class CombineImageSettings {
 
     public void setTilingResolutions(String tilingResolutions) {
         this.tilingResolutions = tilingResolutions;
+    }
+
+    public Map getLegendMap() {
+        return legendMap;
+    }
+
+    public void setLegendMap(Map legendMap) {
+        this.legendMap = legendMap;
     }
 }
