@@ -255,36 +255,40 @@ public class CombineImagesHandler {
             urls.addAll(normalUrls);
         }
         
-        if (urls.size() < 1) {
+        /*if (urls.size() < 1) {
             throw new Exception("Geen verzoeken gevonden om te combineren.");
-        }
-
-        //haal de plaatjes van de urls op.
-        ImageManager im = new ImageManager(urls, maxResponseTime, uname, pw);
+        }*/
+        BufferedImage combinedImages=null;
         BufferedImage[] bi = null;
-        try {
-            im.process();
-            bi = im.getCombinedImages();
-        } catch (Exception e) {
-            throw e;
-        }
-
-        Float[] alphas = null;
-
-        for (int i = 0; i < urls.size(); i++) {
-            CombineImageUrl ciu = (CombineImageUrl) urls.get(i);
-            if (ciu.getAlpha() != null) {
-                if (alphas == null) {
-                    alphas = new Float[urls.size()];
-                }
-                alphas[i] = ciu.getAlpha();
+        //als meer dan 0 plaatjes dan combineren.
+        if (urls.size()>0){
+            //haal de plaatjes van de urls op.
+            ImageManager im = new ImageManager(urls, maxResponseTime, uname, pw);        
+            try {
+                im.process();
+                bi = im.getCombinedImages();
+            } catch (Exception e) {
+                throw e;
             }
+            Float[] alphas = null;
+
+            for (int i = 0; i < urls.size(); i++) {
+                CombineImageUrl ciu = (CombineImageUrl) urls.get(i);
+                if (ciu.getAlpha() != null) {
+                    if (alphas == null) {
+                        alphas = new Float[urls.size()];
+                    }
+                    alphas[i] = ciu.getAlpha();
+                }
+            }
+            //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
+            combinedImages = ImageTool.combineImages(bi, returnMime, alphas, tilingImages);
+        }else{
+            combinedImages = new BufferedImage(settings.getWidth(), settings.getHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
         }
-
+        
         BufferedImage returnImage = null;
-        //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
-        BufferedImage combinedImages = ImageTool.combineImages(bi, returnMime, alphas, tilingImages);
-
+        
         try {
             if (settings.getWktGeoms() != null) {
                 returnImage = ImageTool.drawGeometries(combinedImages, settings);
