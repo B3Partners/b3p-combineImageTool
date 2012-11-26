@@ -31,6 +31,7 @@ import com.vividsolutions.jts.io.WKTReader;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -226,7 +227,11 @@ public class ImageTool {
                 gbi.fill(shape);
             } else if (geom instanceof com.vividsolutions.jts.geom.Point) {
                 centerPoint = calculateCenter(shape, srid, bbox, width, height);
-                gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 4, 4));
+                
+                gbi.setColor(ciw.getColor());
+                gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 10, 10));
+                
+                //gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 4, 4));
             } else {
                 gbi.setStroke(new BasicStroke(3));
                 gbi.draw(shape);
@@ -236,6 +241,10 @@ public class ImageTool {
                     centerPoint = calculateCenter(shape, srid, bbox, width, height);
                 }
                 gbi.setColor(Color.black);
+                
+                Font font = new Font("SansSerif", Font.BOLD, 24);
+                gbi.setFont(font);
+                
                 gbi.drawString(ciw.getLabel(), (float) centerPoint.getX(), (float) centerPoint.getY());
             }
         }
