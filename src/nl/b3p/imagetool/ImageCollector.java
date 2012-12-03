@@ -114,7 +114,11 @@ public class ImageCollector extends Thread {
                     throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
                 }
 
-                String mime = method.getResponseHeader("Content-Type").getValue();
+                String mime = "image/png";
+                if (method.getResponseHeader("Content-Type") != null) {
+                    mime = method.getResponseHeader("Content-Type").getValue();
+                }
+                
                 setBufferedImage(ImageTool.readImage(method, mime));
 
             }
