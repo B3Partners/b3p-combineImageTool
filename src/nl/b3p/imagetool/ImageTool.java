@@ -69,7 +69,8 @@ public class ImageTool {
     public static final String JPEG = "image/jpeg";
     public static final String PNG = "image/png";
 
-    /** Reads an image from an http input stream.
+    /**
+     * Reads an image from an http input stream.
      *
      * @param method Apache HttpClient GetMethod object
      * @param mime String representing the mime type of the image.
@@ -87,18 +88,18 @@ public class ImageTool {
                 mime = mime.substring(0, mime.indexOf(";"));
             }
             String mimeType = getMimeType(mime);
-            
+
             /* TODO: Kijken waarom er geen mime type meer binnenkomt. Wellicht door de 
              * HttpClient vernieuwing in kaartenbalie ? */
             if (mimeType == null || mimeType.equals("")) {
                 mimeType = "image/png";
             }
-            
+
             if (mimeType == null) {
                 log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
                 throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
             }
-            
+
             log.debug("Getting image reader with mime type: " + mimeType);
 
             ir = getReader(mimeType);
@@ -146,9 +147,12 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** First combines the given images to one image and then sends this image back to the client.
+    /**
+     * First combines the given images to one image and then sends this image
+     * back to the client.
      *
-     * @param images BufferedImage array with the images tha have to be combined and sent to the client.
+     * @param images BufferedImage array with the images tha have to be combined
+     * and sent to the client.
      * @param mime String representing the mime type of the image.
      * @param dw DataWrapper object in which the request object is stored.
      *
@@ -227,25 +231,34 @@ public class ImageTool {
                 gbi.fill(shape);
             } else if (geom instanceof com.vividsolutions.jts.geom.Point) {
                 centerPoint = calculateCenter(shape, srid, bbox, width, height);
+
+                /* Anti-alias for nicer circle */
+                RenderingHints rh = gbi.getRenderingHints();
+                rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);                
+                gbi.setRenderingHints(rh);
                 
                 gbi.setColor(ciw.getColor());
-                gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 10, 10));
-                
-                //gbi.draw(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 4, 4));
+                gbi.fill(new Ellipse2D.Double(centerPoint.getX(), centerPoint.getY(), 16, 16));
             } else {
                 gbi.setStroke(new BasicStroke(3));
                 gbi.draw(shape);
             }
+            
             if (ciw.getLabel() != null) {
                 if (centerPoint == null) {
                     centerPoint = calculateCenter(shape, srid, bbox, width, height);
                 }
+                
+                int labelOffsetX = 10;
+                int labelOffsetY = 0;
+                int labelFontSize = 24;
+                
                 gbi.setColor(Color.black);
-                
-                Font font = new Font("SansSerif", Font.BOLD, 24);
+
+                Font font = new Font("SansSerif", Font.BOLD, labelFontSize);
                 gbi.setFont(font);
-                
-                gbi.drawString(ciw.getLabel(), (float) centerPoint.getX(), (float) centerPoint.getY());
+
+                gbi.drawString(ciw.getLabel(), (float) centerPoint.getX() + labelOffsetX, (float) centerPoint.getY() + labelOffsetY);
             }
         }
         gbi.dispose();
@@ -288,7 +301,8 @@ public class ImageTool {
     }
 
     // </editor-fold>
-    /** Writes a TIFF image to the outputstream.
+    /**
+     * Writes a TIFF image to the outputstream.
      *
      * @param bufferedImage BufferedImage created from the given images.
      * @param dw DataWrapper object in which the request object is stored.
@@ -304,7 +318,8 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Writes a JPEG, GIF or PNG image to the outputstream.
+    /**
+     * Writes a JPEG, GIF or PNG image to the outputstream.
      *
      * @param bufferedImage BufferedImage created from the given images.
      * @param dw DataWrapper object in which the request object is stored.
@@ -328,10 +343,13 @@ public class ImageTool {
         return combineImages(images, mime, null, null);
     }
 
-    /** Method which handles the combining of the images. This method redirects to the right method
-     * for the different images, since not every image can be combined in the same way.
+    /**
+     * Method which handles the combining of the images. This method redirects
+     * to the right method for the different images, since not every image can
+     * be combined in the same way.
      *
-     * @param images BufferedImage array with the images tha have to be combined.
+     * @param images BufferedImage array with the images tha have to be
+     * combined.
      * @param mime String representing the mime type of the image.
      *
      * @return BufferedImage
@@ -346,10 +364,13 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Combines JPG images. Combining JPG images is different from the other image types since JPG
-     * has to use an other imageType: BufferedImage.TYPE_INT_RGB.
+    /**
+     * Combines JPG images. Combining JPG images is different from the other
+     * image types since JPG has to use an other imageType:
+     * BufferedImage.TYPE_INT_RGB.
      *
-     * @param images BufferedImage array with the images tha have to be combined.
+     * @param images BufferedImage array with the images tha have to be
+     * combined.
      *
      * @return BufferedImage
      */
@@ -374,10 +395,13 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Combines GIF, TIFF or PNG images. Combining these images is different from the JPG image types since these
-     * has to use an other imageType: BufferedImage.TYPE_INT_ARGB_PRE.
+    /**
+     * Combines GIF, TIFF or PNG images. Combining these images is different
+     * from the JPG image types since these has to use an other imageType:
+     * BufferedImage.TYPE_INT_ARGB_PRE.
      *
-     * @param images BufferedImage array with the images tha have to be combined.
+     * @param images BufferedImage array with the images tha have to be
+     * combined.
      *
      * @return BufferedImage
      */
@@ -385,37 +409,37 @@ public class ImageTool {
     private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas, List<TileImage> tilingImages) {
         int width = 0;
         int height = 0;
-        
+
         /* Als er geen tiling layer aanstaat dan width en height van eerste plaatje
          * pakken. Deze is voor alle gewone wms'en hetzelfde */
         if (tilingImages == null || tilingImages.size() < 1) {
             width = images[0].getWidth();
             height = images[0].getHeight();
         }
-        
+
         /* Als er wel een tiling layer aanstaat dan width en height van eerste
          * TileImage object pakken. Dit is de breedte en hoogte van de map
          * opgevraagd aan Flamingo */
         if (tilingImages != null && tilingImages.size() > 0) {
             TileImage tile = tilingImages.get(0);
-            
-            width = tile.getMapWidth() -1;
-            height = tile.getMapHeight() -1;
+
+            width = tile.getMapWidth() - 1;
+            height = tile.getMapHeight() - 1;
         }
-        
-        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);        
-        
+
+        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+
         Graphics2D gbi = newBufIm.createGraphics();
         gbi.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         gbi.setBackground(Color.WHITE);
-        
+
         Integer numberOfTiles = 0;
-        
+
         /* Deze code gaat er dus van uit de alle tiling images als eerste in 
          * images[] zitten */
         if (tilingImages != null && tilingImages.size() > 0) {
             numberOfTiles = tilingImages.size();
-            
+
             TileImage tile = tilingImages.get(0);
             gbi.drawImage(images[0], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
         } else {
@@ -427,8 +451,8 @@ public class ImageTool {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphas[i]));
             } else {
                 gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-            }            
-            
+            }
+
             /* Als we tiling images combinen gebruiken we hiervoor dus de
              * x, y, width en height die in het TileImage object zit */
             if (tilingImages != null && tilingImages.size() > 0 && i < numberOfTiles) {
@@ -436,15 +460,16 @@ public class ImageTool {
                 gbi.drawImage(images[i], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
             } else {
                 gbi.drawImage(images[i], 0, 0, null);
-            }            
+            }
         }
-        
+
         return newBufIm;
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported MIME types to check if
-     * a certain MIME is supported.
+    /**
+     * Private method which seeks through the supported MIME types to check if a
+     * certain MIME is supported.
      *
      * @param mime String with the MIME to find.
      *
@@ -462,12 +487,14 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getReader(String mime) method.">
     private static ImageReader getReader(String mime) {
@@ -479,15 +506,18 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME. This method checks spe-
-     * cifically for JPG or PNG images because Sun's Java supports two kind of readers
-     * for these particular formats. And because one of these readers doesn't function
-     * well, we need to be sure we have the right reader.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME. This method
+     * checks spe- cifically for JPG or PNG images because Sun's Java supports
+     * two kind of readers for these particular formats. And because one of
+     * these readers doesn't function well, we need to be sure we have the right
+     * reader.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getJPGOrPNGReader(String mime) method.">
     private static ImageReader getJPGOrPNGReader(String mime) {
@@ -507,13 +537,15 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME. This method checks spe-
-     * cifically for GIF or TIFF images.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME. This method
+     * checks spe- cifically for GIF or TIFF images.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getGIFOrTIFFReader(String mime) method.">
     private static ImageReader getGIFOrTIFFReader(String mime) {
@@ -529,12 +561,14 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getWriter(String mime) method.">
     private ImageWriter getWriter(String mime) {
@@ -546,15 +580,18 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME. This method checks spe-
-     * cifically for JPG or PNG images because Sun's Java supports two kind of writers
-     * for these particular formats. And because one of these writers doesn't function
-     * well, we need to be sure we have the right writers.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME. This method
+     * checks spe- cifically for JPG or PNG images because Sun's Java supports
+     * two kind of writers for these particular formats. And because one of
+     * these writers doesn't function well, we need to be sure we have the right
+     * writers.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getJPGOrPNGWriter(String mime) method.">
     private ImageWriter getJPGOrPNGWriter(String mime) {
@@ -572,13 +609,15 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME. This method checks spe-
-     * cifically for GIF or TIFF images.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME. This method
+     * checks spe- cifically for GIF or TIFF images.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getGIFOrTIFFWriter(String mime) method.">
     private ImageWriter getGIFOrTIFFWriter(String mime) {
