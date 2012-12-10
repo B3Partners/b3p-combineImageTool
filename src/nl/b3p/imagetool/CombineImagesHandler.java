@@ -282,7 +282,7 @@ public class CombineImagesHandler {
                 }
             }
             //combineer de opgehaalde plaatjes en als er een wktGeom is meegegeven teken die dan.
-            combinedImages = ImageTool.combineImages(bi, returnMime, alphas, tilingImages);
+            combinedImages = ImageTool.combineImages(bi, returnMime, alphas, tilingImages,urls,settings.getWidth(),settings.getHeight());
         }else{
             combinedImages = new BufferedImage(settings.getWidth(), settings.getHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
         }

@@ -28,6 +28,9 @@ public class CombineImageSettings {
     private Color defaultWktGeomColor= Color.RED;
     private String mimeType="image/png";
     
+    private Integer maxWidth=2048;
+    private Integer maxHeight=2048;
+    
     private Map legendMap = new HashMap();
     
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
@@ -95,6 +98,12 @@ public class CombineImageSettings {
             }catch(Exception e){
                 log.error("Can't add BBOX: bbox",e);
             }
+        }
+        private Bbox (Double minx, Double miny, Double maxx, Double maxy){
+            this.minx=minx;
+            this.miny=miny;
+            this.maxx=maxx;
+            this.maxy=maxy;
         }
 
         public void setBbox(double[] b){
@@ -175,7 +184,7 @@ public class CombineImageSettings {
      * Tot nu alleen WMS urls ondersteund
      */
     public List getCalculatedUrls(List oldList){
-        List returnValue=new ArrayList();
+        List<CombineImageUrl> returnValue=new ArrayList<CombineImageUrl>();
         if (bbox == null || width == null || height == null) {
             //log.info("Not all settings set (width,height and bbox must be set to recalculate). Return original urls");
             return oldList;
@@ -183,55 +192,124 @@ public class CombineImageSettings {
             return returnValue;
         }        
         for (int i=0; i < oldList.size(); i++){
-            returnValue.add(getCalculatedUrl(((CombineImageUrl)oldList.get(i))));
+            returnValue.addAll(getCalculatedUrl(((CombineImageUrl)oldList.get(i))));
         }
-        if (returnValue.size()==oldList.size()){
-            return returnValue;
-        }else{
-            return null;
-        }
+        return returnValue;
+        
     }
     /**
      * Een enkele url omzetten zodat de bbox, width en height goed worden geset.
      * Tot nu alleen WMS urls ondersteund
      */
-    public CombineImageUrl getCalculatedUrl(CombineImageUrl url){
+    public List<CombineImageUrl> getCalculatedUrl(CombineImageUrl url){
         if (bbox == null || width == null || height == null) {
             log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
+        
+        List<CombineImageUrl> urls = new ArrayList<CombineImageUrl>();
+        
         Bbox newBbox= getCalculatedBbox();
-        String newurl=new String(url.getUrl());
-        newurl=changeParameter(newurl, "bbox", newBbox.toString());
-        newurl=changeParameter(newurl, "width", width.toString());
-        newurl=changeParameter(newurl, "height", height.toString());
-        url.setUrl(newurl);
-        return url;
+        Double resolutionWidth=(newBbox.maxx - newBbox.minx) / width; 
+        Double resolutionHeight=(newBbox.maxy - newBbox.miny) / height;
+        
+        for (int w=0; w < width; w+=this.maxWidth) { 
+            for (int h=0; h < height; h+=this.maxHeight) {                       
+                Integer curWidth = w+this.maxWidth;
+                //als groter dan de opgevraagde width dan de opgevraagde width gebruiken
+                if (curWidth> width){
+                    curWidth=width;
+                }
+                //als groter dan de opgevraagde height dan de opgevraagde height gebruiken
+                Integer curHeight = h+this.maxHeight;
+                if (curHeight> height){
+                    curHeight=height;
+                }
+                
+                String newurl=new String(url.getUrl());                
+                
+                Bbox curBbox = new Bbox(
+                        newBbox.minx+w*resolutionWidth,
+                        newBbox.miny+h*resolutionHeight,
+                        newBbox.minx+curWidth*resolutionWidth,
+                        newBbox.miny+curHeight*resolutionHeight);                
+                
+                newurl=changeParameter(newurl, "bbox", curBbox.toString());
+                newurl=changeParameter(newurl, "width", ""+(curWidth-w));
+                newurl=changeParameter(newurl, "height", ""+(curHeight-h));
+                
+                CombineImageUrl newCiu = new CombineImageUrl(newurl,url.getAlpha());
+                
+                /* TODO: Juist berekenen positie plaatjes. Even kijken naar
+                 * hoe dat nu met de tiling images gaat */
+                TileImage ti = calcTilePosition(width, height, curBbox, newBbox);
+                
+                int posX = w; //width - w;
+                int posY = h; //height - h;
+                
+                newCiu.setPosX(posX);
+                newCiu.setPosY(posY);
+                
+                urls.add(newCiu);
+                
+                log.debug("NEW URL: " + newCiu.getUrl());
+                log.debug("NEW X: " + posX);
+                log.debug("NEW Y: " + posY);
+                log.debug("NEW URL BBOX: " + curBbox.toString());
+                log.debug("NEW URL WIDTH: " + (curWidth-w));
+                log.debug("NEW URL HEIGHT: " + (curHeight-h));
+            }
+        }
+        return urls;
     }
+    
+    private TileImage calcTilePosition(Integer mapWidth, Integer mapHeight,
+            Bbox tileBbox, Bbox requestBbox) {
+        
+        TileImage tile = new TileImage();
+        
+        double epsilon = 0.5;
+        
+        Double msx = (requestBbox.getMaxx() - requestBbox.getMinx()) / mapWidth;
+        Double msy = (requestBbox.getMaxy() - requestBbox.getMiny()) / mapHeight;
+        
+        Long posX = Math.round( (tileBbox.getMinx() - requestBbox.getMinx()) / msx );
+        Long posY = Math.round( (requestBbox.getMaxy() - tileBbox.getMaxy()) / msy );
+        
+        tile.setPosX(posX.intValue());
+        tile.setPosY(posY.intValue());
+        
+        return tile;
+    }
+    
+    
     /**
      * Geeft een kloppende bbox terug. Dus kijkt naar de width en height en past
      * de bbox zo aan en returned die zodat je een bbox hebt die klopt met de width en height
      * verhoudingen
      */
     public Bbox getCalculatedBbox(){
-        if (bbox == null || width == null || height == null) {
+        return getCalculatedBbox(bbox, width, height);
+    }
+    public Bbox getCalculatedBbox(Bbox bb, Integer w, Integer h){
+        if (bb == null || w == null || h == null) {
             log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
-        Bbox newBbox= new Bbox(bbox);
-        double bboxXwidth = bbox.maxx - bbox.minx;
-        double bboxYheight = bbox.maxy - bbox.miny;
+        Bbox newBbox= new Bbox(bb);
+        double bboxXwidth = bb.maxx - bb.minx;
+        double bboxYheight = bb.maxy - bb.miny;
 
-        double unitsPerPixelWidth = bboxXwidth / width;
-        double unitsPerPixelHeight = bboxYheight / height;
+        double unitsPerPixelWidth = bboxXwidth / w;
+        double unitsPerPixelHeight = bboxYheight / h;
 
         if (unitsPerPixelWidth > unitsPerPixelHeight) {
             //verander y waarden van bbox
-            double newYHeight2 =(unitsPerPixelWidth*height-bboxYheight)/2;
+            double newYHeight2 =(unitsPerPixelWidth*h-bboxYheight)/2;
             newBbox.setMiny(newBbox.getMiny()-newYHeight2);
             newBbox.setMaxy(newBbox.getMaxy()+newYHeight2);
         } else {
-            double newXWidth2= (unitsPerPixelHeight*width-bboxXwidth)/2;
+            double newXWidth2= (unitsPerPixelHeight*w-bboxXwidth)/2;
             newBbox.setMinx(newBbox.getMinx()-newXWidth2);
             newBbox.setMaxx(newBbox.getMaxx()+newXWidth2);
         }
@@ -410,7 +488,7 @@ public class CombineImageSettings {
         return hw;
     }
 
-    public Integer[] getWidthAndHeightFromUrl(CombineImageUrl ciu) {
+    public static Integer[] getWidthAndHeightFromUrl(CombineImageUrl ciu) {
         if (ciu == null || ciu.getUrl()==null) {
             return null;
         }

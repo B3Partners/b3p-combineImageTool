@@ -340,7 +340,7 @@ public class ImageTool {
     // </editor-fold>
 
     public static BufferedImage combineImages(BufferedImage[] images, String mime) {
-        return combineImages(images, mime, null, null);
+        return combineImages(images, mime, null, null,null,null,null);
     }
 
     /**
@@ -355,11 +355,11 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineImages(BufferedImage [] images, String mime) method.">
-    public static BufferedImage combineImages(BufferedImage[] images, String mime, Float alphas[], List<TileImage> tilingImages) {
+    public static BufferedImage combineImages(BufferedImage[] images, String mime, Float alphas[], List<TileImage> tilingImages, List<CombineImageUrl> cius, Integer width, Integer height) {
         if (mime.equals(JPEG)) {
             return combineJPGImages(images, alphas);
         } else {
-            return combineOtherImages(images, alphas, tilingImages);
+            return combineOtherImages(images, alphas, tilingImages,cius,width,height);
         }
     }
     // </editor-fold>
@@ -406,28 +406,27 @@ public class ImageTool {
      * @return BufferedImage
      */
     // <editor-fold defaultstate="" desc="combineOtherImages(BufferedImage [] images) method.">
-    private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas, List<TileImage> tilingImages) {
-        int width = 0;
-        int height = 0;
-
+    private static BufferedImage combineOtherImages(BufferedImage[] images, Float[] alphas, List<TileImage> tilingImages, List<CombineImageUrl> cius, Integer totalWidth, Integer totalHeight) {
         /* Als er geen tiling layer aanstaat dan width en height van eerste plaatje
          * pakken. Deze is voor alle gewone wms'en hetzelfde */
-        if (tilingImages == null || tilingImages.size() < 1) {
-            width = images[0].getWidth();
-            height = images[0].getHeight();
+        if (totalWidth == null || totalHeight == null) {
+            if (tilingImages == null || tilingImages.size() < 1) {
+                totalWidth = images[0].getWidth();
+                totalHeight = images[0].getHeight();
+            }
+
+            /* Als er wel een tiling layer aanstaat dan width en height van eerste
+             * TileImage object pakken. Dit is de breedte en hoogte van de map
+             * opgevraagd aan Flamingo */
+            if (tilingImages != null && tilingImages.size() > 0) {
+                TileImage tile = tilingImages.get(0);
+
+                totalWidth = tile.getMapWidth() - 1;
+                totalHeight = tile.getMapHeight() - 1;
+            }
         }
 
-        /* Als er wel een tiling layer aanstaat dan width en height van eerste
-         * TileImage object pakken. Dit is de breedte en hoogte van de map
-         * opgevraagd aan Flamingo */
-        if (tilingImages != null && tilingImages.size() > 0) {
-            TileImage tile = tilingImages.get(0);
-
-            width = tile.getMapWidth() - 1;
-            height = tile.getMapHeight() - 1;
-        }
-
-        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+        BufferedImage newBufIm = new BufferedImage(totalWidth, totalHeight, BufferedImage.TYPE_INT_ARGB_PRE);
 
         Graphics2D gbi = newBufIm.createGraphics();
         gbi.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -459,7 +458,13 @@ public class ImageTool {
                 TileImage tile = tilingImages.get(i);
                 gbi.drawImage(images[i], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
             } else {
-                gbi.drawImage(images[i], 0, 0, null);
+                if (cius!=null){
+                    CombineImageUrl ciu = cius.get(i-numberOfTiles);
+                    Integer[] wh=CombineImageSettings.getWidthAndHeightFromUrl(ciu);
+                    gbi.drawImage(images[i],ciu.getPosX(), ciu.getPosY(), wh[0],wh[1], null);
+                }else{
+                    gbi.drawImage(images[i],0,0,null);
+                }
             }
         }
 
