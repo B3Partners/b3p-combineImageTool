@@ -37,6 +37,7 @@ public class ImageManager {
     private final Log log = LogFactory.getLog(this.getClass());
     private List ics = new ArrayList();
     private int maxResponseTime = 10000;
+    private int maxThreads = 4;
 
     public ImageManager(List urls, int maxResponseTime) {
         this(urls, maxResponseTime, null, null);
@@ -60,25 +61,68 @@ public class ImageManager {
     }
 
     public void process() throws Exception {
+        log.debug("IMAGE LIST SIZE: " + ics.size());
+        
+        process(0, maxThreads);
+    }
 
-        /* TODO: Hier aantal toevoegen en daar op wachten als aantal
-         * nog niet bereikt is dan recursief weer toevoegen */
+    List<ImageCollector> activeThreads = new ArrayList();
+    
+    public void process(Integer startIndex, Integer endIndex) throws Exception { 
+        if (endIndex >= ics.size()) {
+            endIndex = ics.size() -1;
+        }
+        
+        boolean active = false;
+        if (activeThreads.size() > 0) {
+            for (ImageCollector ic : activeThreads) {
+                if (ic.getStatus() == ImageCollector.ACTIVE) {
+                    active = true;
+                }
+            }
+            
+            if (active) {
+                process(startIndex, endIndex);
+            } else {
+                activeThreads.clear();
+            }
+        }
         
         // Hier worden de threads gestart
-        ImageCollector ic = null;
-        for (int i = 0; i < ics.size(); i++) {
-            ic = (ImageCollector) ics.get(i);
-            if (ic.getStatus() == ImageCollector.NEW) {
-                ic.processNew();
+        ImageCollector ic;
+        for (int i = startIndex; i <= endIndex; i++) {
+            if (i <= ics.size() - 1) {
+                ic = (ImageCollector) ics.get(i);
+                if (ic.getStatus() == ImageCollector.NEW) {
+                    ic.processNew();
+                }
             }
         }
 
         // Hier wordt op de threads gewacht tot ze klaar zijn.
-        for (int i = 0; i < ics.size(); i++) {
+        for (int i = startIndex; i <= endIndex; i++) {
             ic = (ImageCollector) ics.get(i);
             if (ic.getStatus() == ImageCollector.ACTIVE) {//if (ic.isAlive()) { /
+                activeThreads.add(ic);
+                
+                log.debug("ADDED NEW THREAD: " + ic.getId());
+                log.debug("START INDEX: " + startIndex);
+                log.debug("END INDEX: " + endIndex);
+                
                 ic.processWaiting();
             }
+        }
+        
+        if (endIndex < ics.size() -1) {
+            int idx;
+            
+            if (endIndex + maxThreads >= ics.size()) {
+                idx = ics.size()-1;
+            } else {
+                idx = endIndex + maxThreads;
+            }
+            
+            process(endIndex, idx);
         }
     }
 
