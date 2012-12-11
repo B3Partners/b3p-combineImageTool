@@ -61,6 +61,9 @@ public class ImageManager {
 
     public void process() throws Exception {
 
+        /* TODO: Hier aantal toevoegen en daar op wachten als aantal
+         * nog niet bereikt is dan recursief weer toevoegen */
+        
         // Hier worden de threads gestart
         ImageCollector ic = null;
         for (int i = 0; i < ics.size(); i++) {

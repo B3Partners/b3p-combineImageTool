@@ -25,20 +25,17 @@ public class CombineImageSettings {
     private Integer srid = 28992;
     private Integer width = null;
     private Integer height = null;
-    private Color defaultWktGeomColor= Color.RED;
-    private String mimeType="image/png";
-    
-    private Integer maxWidth=2048;
-    private Integer maxHeight=2048;
-    
+    private Color defaultWktGeomColor = Color.RED;
+    private String mimeType = "image/png";
+    private Integer maxTileWidth = 2048;
+    private Integer maxTileHeight = 2048;
     private Map legendMap = new HashMap();
-    
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
     private String tilingBbox = null;
     private String tilingResolutions = null;
     private Integer tilingTileWidth = null;
     private Integer tilingTileHeight = null;
-    private String tilingServiceUrl = null;    
+    private String tilingServiceUrl = null;
 
     /**
      * @return the wktGeomColor
@@ -80,33 +77,34 @@ public class CombineImageSettings {
             setBbox(b);
         }
 
-        public Bbox(Bbox b){
+        public Bbox(Bbox b) {
             setBbox(b.toDoubleArray());
         }
 
         private Bbox(String bbox) {
-            try{
+            try {
                 String[] b = bbox.split(",");
-                if (b.length==4){
+                if (b.length == 4) {
                     minx = Double.parseDouble(b[0]);
                     miny = Double.parseDouble(b[1]);
                     maxx = Double.parseDouble(b[2]);
                     maxy = Double.parseDouble(b[3]);
-                }else{
+                } else {
                     throw new Exception("Constructor needs 4 coords.");
                 }
-            }catch(Exception e){
-                log.error("Can't add BBOX: bbox",e);
+            } catch (Exception e) {
+                log.error("Can't add BBOX: bbox", e);
             }
         }
-        private Bbox (Double minx, Double miny, Double maxx, Double maxy){
-            this.minx=minx;
-            this.miny=miny;
-            this.maxx=maxx;
-            this.maxy=maxy;
+
+        private Bbox(Double minx, Double miny, Double maxx, Double maxy) {
+            this.minx = minx;
+            this.miny = miny;
+            this.maxx = maxx;
+            this.maxy = maxy;
         }
 
-        public void setBbox(double[] b){
+        public void setBbox(double[] b) {
             if (b == null || b.length != 4) {
                 return;
             }
@@ -149,7 +147,7 @@ public class CombineImageSettings {
         }
 
         double[] toDoubleArray() {
-            if (minx==null||miny==null||maxx==null||maxy==null){
+            if (minx == null || miny == null || maxx == null || maxy == null) {
                 return null;
             }
             double[] r = new double[4];
@@ -159,144 +157,162 @@ public class CombineImageSettings {
             r[3] = maxy;
             return r;
         }
+
         @Override
-        public String toString(){
-            String returnValue="";
-            returnValue+=getMinx();
-            returnValue+=",";
-            returnValue+=getMiny();
-            returnValue+=",";
-            returnValue+=getMaxx();
-            returnValue+=",";
-            returnValue+=getMaxy();
+        public String toString() {
+            String returnValue = "";
+            returnValue += getMinx();
+            returnValue += ",";
+            returnValue += getMiny();
+            returnValue += ",";
+            returnValue += getMaxx();
+            returnValue += ",";
+            returnValue += getMaxy();
             return returnValue;
         }
     }
+
     /**
      * Calculate the urls in the combineImageSettings.
      */
-    public List getCalculatedUrls(){
+    public List getCalculatedUrls() {
         return getCalculatedUrls(urls);
     }
+
     /**
-     * Geeft de url's terug met daarin de bbox met juist verhoudingen tov de width en height
-     * En de juiste Width en Height van de settings
-     * Tot nu alleen WMS urls ondersteund
+     * Geeft de url's terug met daarin de bbox met juist verhoudingen tov de
+     * width en height En de juiste Width en Height van de settings Tot nu
+     * alleen WMS urls ondersteund
      */
-    public List getCalculatedUrls(List oldList){
-        List<CombineImageUrl> returnValue=new ArrayList<CombineImageUrl>();
+    public List getCalculatedUrls(List oldList) {
+        List<CombineImageUrl> returnValue = new ArrayList<CombineImageUrl>();
         if (bbox == null || width == null || height == null) {
             //log.info("Not all settings set (width,height and bbox must be set to recalculate). Return original urls");
             return oldList;
-        }else if(oldList==null){
+        } else if (oldList == null) {
             return returnValue;
-        }        
-        for (int i=0; i < oldList.size(); i++){
-            returnValue.addAll(getCalculatedUrl(((CombineImageUrl)oldList.get(i))));
+        }
+        for (int i = 0; i < oldList.size(); i++) {
+            returnValue.addAll(getCalculatedUrl(((CombineImageUrl) oldList.get(i))));
         }
         return returnValue;
-        
+
     }
+
     /**
      * Een enkele url omzetten zodat de bbox, width en height goed worden geset.
      * Tot nu alleen WMS urls ondersteund
      */
-    public List<CombineImageUrl> getCalculatedUrl(CombineImageUrl url){
+    public List<CombineImageUrl> getCalculatedUrl(CombineImageUrl url) {
         if (bbox == null || width == null || height == null) {
             log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
-        
+
         List<CombineImageUrl> urls = new ArrayList<CombineImageUrl>();
+
+        Bbox newBbox = getCalculatedBbox();
+        Double resolutionWidth = (newBbox.maxx - newBbox.minx) / width;
+        Double resolutionHeight = (newBbox.maxy - newBbox.miny) / height;
         
-        Bbox newBbox= getCalculatedBbox();
-        Double resolutionWidth=(newBbox.maxx - newBbox.minx) / width; 
-        Double resolutionHeight=(newBbox.maxy - newBbox.miny) / height;
+        log.debug("WIDTH: " + width);
+        log.debug("HEIGHT: " + height);
         
-        for (int w=0; w < width; w+=this.maxWidth) { 
-            for (int h=0; h < height; h+=this.maxHeight) {                       
-                Integer curWidth = w+this.maxWidth;
-                //als groter dan de opgevraagde width dan de opgevraagde width gebruiken
-                if (curWidth> width){
-                    curWidth=width;
-                }
-                //als groter dan de opgevraagde height dan de opgevraagde height gebruiken
-                Integer curHeight = h+this.maxHeight;
-                if (curHeight> height){
-                    curHeight=height;
+        for (int beginX = 0; beginX < width; beginX += this.maxTileWidth) {
+            for (int endY = height; endY >= 0; endY -= this.maxTileHeight) {
+                
+                Integer endX = beginX + this.maxTileWidth;
+                if (endX > width) {
+                    endX = width;
                 }
                 
-                String newurl=new String(url.getUrl());                
-                
+                Integer beginY = endY-this.maxTileHeight;
+                if (beginY < 0) {
+                    beginY = 0;
+                }
+
                 Bbox curBbox = new Bbox(
-                        newBbox.minx+w*resolutionWidth,
-                        newBbox.miny+h*resolutionHeight,
-                        newBbox.minx+curWidth*resolutionWidth,
-                        newBbox.miny+curHeight*resolutionHeight);                
+                        newBbox.minx + beginX * resolutionWidth,
+                        newBbox.miny + (height-endY) * resolutionHeight,
+                        newBbox.minx + endX * resolutionWidth,
+                        newBbox.miny + (height-beginY) * resolutionHeight);
                 
-                newurl=changeParameter(newurl, "bbox", curBbox.toString());
-                newurl=changeParameter(newurl, "width", ""+(curWidth-w));
-                newurl=changeParameter(newurl, "height", ""+(curHeight-h));
+                String newurl = url.getUrl();
+                newurl = changeParameter(newurl, "bbox", curBbox.toString());
+                newurl = changeParameter(newurl, "width", "" + (endX-beginX));
+                newurl = changeParameter(newurl, "height", "" + (endY-beginY));
+
+                CombineImageUrl newCiu = new CombineImageUrl(newurl, url.getAlpha()); 
+
+                newCiu.setPosX(beginX);
+                newCiu.setPosY(beginY);
                 
-                CombineImageUrl newCiu = new CombineImageUrl(newurl,url.getAlpha());
-                
-                /* TODO: Juist berekenen positie plaatjes. Even kijken naar
-                 * hoe dat nu met de tiling images gaat */
-                TileImage ti = calcTilePosition(width, height, curBbox, newBbox);
-                
-                int posX = w; //width - w;
-                int posY = h; //height - h;
-                
-                newCiu.setPosX(posX);
-                newCiu.setPosY(posY);
-                
+                log.debug("IMAGE URL: " + newurl);
+                log.debug("POS X: " + beginX);
+                log.debug("POS Y: " + beginY);
+
                 urls.add(newCiu);
-                
-                log.debug("NEW URL: " + newCiu.getUrl());
-                log.debug("NEW X: " + posX);
-                log.debug("NEW Y: " + posY);
-                log.debug("NEW URL BBOX: " + curBbox.toString());
-                log.debug("NEW URL WIDTH: " + (curWidth-w));
-                log.debug("NEW URL HEIGHT: " + (curHeight-h));
             }
         }
+        
         return urls;
     }
     
+    private int getTilingCoord(Double serviceMin, Double serviceMax,
+            Double tileSizeMapUnits, Double coord) {
+        
+        double epsilon = 0.00000001;        
+        Double tileIndex;
+        
+        tileIndex = Math.floor( (coord - serviceMin) / (tileSizeMapUnits + epsilon) );
+        
+        if (tileIndex < 0) {
+                    tileIndex = 0.0;
+                }
+        
+        Double maxBbox = Math.floor( (serviceMax - serviceMin) / (tileSizeMapUnits + epsilon) );
+        
+        if (tileIndex > maxBbox) {
+                    tileIndex = maxBbox;
+                }
+        
+        return tileIndex.intValue();   
+    }
+
     private TileImage calcTilePosition(Integer mapWidth, Integer mapHeight,
             Bbox tileBbox, Bbox requestBbox) {
-        
+
         TileImage tile = new TileImage();
-        
+
         double epsilon = 0.5;
-        
+
         Double msx = (requestBbox.getMaxx() - requestBbox.getMinx()) / mapWidth;
         Double msy = (requestBbox.getMaxy() - requestBbox.getMiny()) / mapHeight;
-        
-        Long posX = Math.round( (tileBbox.getMinx() - requestBbox.getMinx()) / msx );
-        Long posY = Math.round( (requestBbox.getMaxy() - tileBbox.getMaxy()) / msy );
-        
+
+        Long posX = Math.round((tileBbox.getMinx() - requestBbox.getMinx()) / msx);
+        Long posY = Math.round((requestBbox.getMaxy() - tileBbox.getMaxy()) / msy);
+
         tile.setPosX(posX.intValue());
         tile.setPosY(posY.intValue());
-        
+
         return tile;
     }
-    
-    
+
     /**
      * Geeft een kloppende bbox terug. Dus kijkt naar de width en height en past
-     * de bbox zo aan en returned die zodat je een bbox hebt die klopt met de width en height
-     * verhoudingen
+     * de bbox zo aan en returned die zodat je een bbox hebt die klopt met de
+     * width en height verhoudingen
      */
-    public Bbox getCalculatedBbox(){
+    public Bbox getCalculatedBbox() {
         return getCalculatedBbox(bbox, width, height);
     }
-    public Bbox getCalculatedBbox(Bbox bb, Integer w, Integer h){
+
+    public Bbox getCalculatedBbox(Bbox bb, Integer w, Integer h) {
         if (bb == null || w == null || h == null) {
             log.info("Not all settings set (width,height and bbox must be set)");
             return null;
         }
-        Bbox newBbox= new Bbox(bb);
+        Bbox newBbox = new Bbox(bb);
         double bboxXwidth = bb.maxx - bb.minx;
         double bboxYheight = bb.maxy - bb.miny;
 
@@ -305,13 +321,13 @@ public class CombineImageSettings {
 
         if (unitsPerPixelWidth > unitsPerPixelHeight) {
             //verander y waarden van bbox
-            double newYHeight2 =(unitsPerPixelWidth*h-bboxYheight)/2;
-            newBbox.setMiny(newBbox.getMiny()-newYHeight2);
-            newBbox.setMaxy(newBbox.getMaxy()+newYHeight2);
+            double newYHeight2 = (unitsPerPixelWidth * h - bboxYheight) / 2;
+            newBbox.setMiny(newBbox.getMiny() - newYHeight2);
+            newBbox.setMaxy(newBbox.getMaxy() + newYHeight2);
         } else {
-            double newXWidth2= (unitsPerPixelHeight*w-bboxXwidth)/2;
-            newBbox.setMinx(newBbox.getMinx()-newXWidth2);
-            newBbox.setMaxx(newBbox.getMaxx()+newXWidth2);
+            double newXWidth2 = (unitsPerPixelHeight * w - bboxXwidth) / 2;
+            newBbox.setMinx(newBbox.getMinx() - newXWidth2);
+            newBbox.setMaxx(newBbox.getMaxx() + newXWidth2);
         }
         return newBbox;
     }
@@ -320,10 +336,10 @@ public class CombineImageSettings {
         return urls;
     }
 
-    public void setUrls(String[] urls){
-        this.urls=new ArrayList();
-        for (int i=0; i < urls.length; i++){    
-            CombineImageUrl ciu= new CombineImageUrl(urls[i]);
+    public void setUrls(String[] urls) {
+        this.urls = new ArrayList();
+        for (int i = 0; i < urls.length; i++) {
+            CombineImageUrl ciu = new CombineImageUrl(urls[i]);
             this.urls.add(ciu);
         }
     }
@@ -339,13 +355,15 @@ public class CombineImageSettings {
     public void setWktGeoms(List<CombineImageWkt> wktGeoms) {
         this.wktGeoms = wktGeoms;
     }
-    public void setWktGeoms(String[] wktGeoms){
-        this.wktGeoms=new ArrayList();
-        for (int i=0; i < wktGeoms.length; i++){
-            CombineImageWkt ciw= new CombineImageWkt(wktGeoms[i]);
+
+    public void setWktGeoms(String[] wktGeoms) {
+        this.wktGeoms = new ArrayList();
+        for (int i = 0; i < wktGeoms.length; i++) {
+            CombineImageWkt ciw = new CombineImageWkt(wktGeoms[i]);
             this.wktGeoms.add(ciw);
         }
     }
+
     public Bbox getBbox() {
         return bbox;
     }
@@ -353,6 +371,7 @@ public class CombineImageSettings {
     public void setBbox(double[] bbox) {
         this.bbox = new Bbox(bbox);
     }
+
     public void setBbox(String bbox) {
         this.bbox = new Bbox(bbox);
     }
@@ -381,6 +400,7 @@ public class CombineImageSettings {
         this.height = height;
     }
     /*Returned een bepaalde parameter uit de url.*/
+
     private static String getParameter(String url, String key) {
         String lowerUrl = url.toLowerCase();
         if (lowerUrl.indexOf("?" + key + "=") >= 0 || lowerUrl.indexOf("&" + key + "=") >= 0) {
@@ -400,15 +420,17 @@ public class CombineImageSettings {
         }
         return null;
     }
+
     /**
      * Returned een url met een aangepaste parameter
+     *
      * @param url de url die veranderd moet worden
      * @param key de waarde van de parameter key
      * @param newValue de nieuwe waarde van de parameter
      * @return de veranderde url
      *
      */
-    public static String changeParameter(String url, String key,String newValue) {
+    public static String changeParameter(String url, String key, String newValue) {
         String lowerUrl = url.toLowerCase();
         if (lowerUrl.indexOf("?" + key + "=") >= 0 || lowerUrl.indexOf("&" + key + "=") >= 0) {
             int beginIndex = 0;
@@ -422,38 +444,40 @@ public class CombineImageSettings {
                 endIndex = lowerUrl.indexOf("&", beginIndex);
             }
             if (beginIndex < endIndex) {
-                String newUrl="";
-                if (beginIndex>0){
-                    newUrl+=url.substring(0,beginIndex);
+                String newUrl = "";
+                if (beginIndex > 0) {
+                    newUrl += url.substring(0, beginIndex);
                 }
-                newUrl+=newValue;
-                if (endIndex < url.length()){
-                    newUrl+=url.substring(endIndex,url.length());
+                newUrl += newValue;
+                if (endIndex < url.length()) {
+                    newUrl += url.substring(endIndex, url.length());
                 }
                 return newUrl;
             }
         }
         return url;
     }
+
     /**
      * Haalt de bbox op van de eerste de beste bbox in een url
      */
     public Bbox getBboxFromUrls() {
         Bbox bb = null;
         for (int i = 0; i < urls.size() && bb == null; i++) {
-            bb = getBboxFromUrl((CombineImageUrl)urls.get(i));
+            bb = getBboxFromUrl((CombineImageUrl) urls.get(i));
         }
         return bb;
     }
+
     /**
      * Haalt de bbox van de meegegeven url op (of null als die er niet is)
      */
     public Bbox getBboxFromUrl(CombineImageUrl ciu) {
-        if (ciu == null || ciu.getUrl()==null) {
+        if (ciu == null || ciu.getUrl() == null) {
             return null;
         }
         double[] bb = null;
-        String url=ciu.getUrl();
+        String url = ciu.getUrl();
         String stringBbox = getParameter(url, "bbox");
         if (stringBbox != null) {
             if (stringBbox.split(",").length != 4) {
@@ -477,22 +501,23 @@ public class CombineImageSettings {
             return null;
         }
     }
+
     /**
-     *Haalt de breedte en hoogte uit de eerste url waar hij dat vind
+     * Haalt de breedte en hoogte uit de eerste url waar hij dat vind
      */
     public Integer[] getWidthAndHeightFromUrls() {
         Integer[] hw = null;
         for (int i = 0; i < urls.size() && hw == null; i++) {
-            hw = getWidthAndHeightFromUrl((CombineImageUrl)urls.get(i));
+            hw = getWidthAndHeightFromUrl((CombineImageUrl) urls.get(i));
         }
         return hw;
     }
 
     public static Integer[] getWidthAndHeightFromUrl(CombineImageUrl ciu) {
-        if (ciu == null || ciu.getUrl()==null) {
+        if (ciu == null || ciu.getUrl() == null) {
             return null;
         }
-        String url=ciu.getUrl();
+        String url = ciu.getUrl();
 
         String heightString = getParameter(url, "height");
         String widthString = getParameter(url, "width");

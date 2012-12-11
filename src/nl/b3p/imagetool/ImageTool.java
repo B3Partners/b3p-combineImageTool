@@ -442,7 +442,8 @@ public class ImageTool {
             TileImage tile = tilingImages.get(0);
             gbi.drawImage(images[0], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
         } else {
-            gbi.drawImage(images[0], 0, 0, null);
+            CombineImageUrl ciu = cius.get(numberOfTiles);
+            gbi.drawImage(images[0], ciu.getPosX(), ciu.getPosY(), null);
         }
 
         for (int i = 1; i < images.length; i++) {

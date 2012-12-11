@@ -197,17 +197,19 @@ public class CombineImagesHandler {
             Double tileSizeMapUnits, Double coord) {
         
         double epsilon = 0.00000001;        
-        Double tileIndex = 0.0;
+        Double tileIndex;
         
         tileIndex = Math.floor( (coord - serviceMin) / (tileSizeMapUnits + epsilon) );
         
-        if (tileIndex < 0)
-            tileIndex = 0.0;
+        if (tileIndex < 0) {
+                    tileIndex = 0.0;
+                }
         
         Double maxBbox = Math.floor( (serviceMax - serviceMin) / (tileSizeMapUnits + epsilon) );
         
-        if (tileIndex > maxBbox)
-            tileIndex = maxBbox;
+        if (tileIndex > maxBbox) {
+                    tileIndex = maxBbox;
+                }
         
         return tileIndex.intValue();   
     }
