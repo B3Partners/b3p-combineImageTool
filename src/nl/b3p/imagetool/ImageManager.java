@@ -37,7 +37,7 @@ public class ImageManager {
     private final Log log = LogFactory.getLog(this.getClass());
     private List ics = new ArrayList();
     private int maxResponseTime = 10000;
-    private int maxThreads = 4;
+    private int maxThreads = 8;
 
     public ImageManager(List urls, int maxResponseTime) {
         this(urls, maxResponseTime, null, null);
@@ -60,9 +60,7 @@ public class ImageManager {
         }
     }
 
-    public void process() throws Exception {
-        log.debug("IMAGE LIST SIZE: " + ics.size());
-        
+    public void process() throws Exception {        
         process(0, maxThreads);
     }
 
@@ -104,10 +102,6 @@ public class ImageManager {
             ic = (ImageCollector) ics.get(i);
             if (ic.getStatus() == ImageCollector.ACTIVE) {//if (ic.isAlive()) { /
                 activeThreads.add(ic);
-                
-                log.debug("ADDED NEW THREAD: " + ic.getId());
-                log.debug("START INDEX: " + startIndex);
-                log.debug("END INDEX: " + endIndex);
                 
                 ic.processWaiting();
             }

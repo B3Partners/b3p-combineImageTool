@@ -460,7 +460,7 @@ public class ImageTool {
                 gbi.drawImage(images[i], tile.getPosX(), tile.getPosY(), tile.getImageWidth(), tile.getImageHeight(), null);
             } else {
                 if (cius!=null){
-                    CombineImageUrl ciu = cius.get(i-numberOfTiles);
+                    CombineImageUrl ciu = cius.get(i);
                     Integer[] wh=CombineImageSettings.getWidthAndHeightFromUrl(ciu);
                     gbi.drawImage(images[i],ciu.getPosX(), ciu.getPosY(), wh[0],wh[1], null);
                 }else{

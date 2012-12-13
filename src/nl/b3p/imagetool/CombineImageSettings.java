@@ -237,7 +237,7 @@ public class CombineImageSettings {
                         newBbox.minx + endX * resolutionWidth,
                         newBbox.miny + (height-beginY) * resolutionHeight);
                 
-                String newurl = url.getUrl();
+                String newurl = url.getUrl();                
                 newurl = changeParameter(newurl, "bbox", curBbox.toString());
                 newurl = changeParameter(newurl, "width", "" + (endX-beginX));
                 newurl = changeParameter(newurl, "height", "" + (endY-beginY));
@@ -250,7 +250,7 @@ public class CombineImageSettings {
                 log.debug("IMAGE URL: " + newurl);
                 log.debug("POS X: " + beginX);
                 log.debug("POS Y: " + beginY);
-
+                
                 urls.add(newCiu);
             }
         }
