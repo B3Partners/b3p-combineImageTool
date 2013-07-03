@@ -29,7 +29,7 @@ public class CombineImageSettings {
     private String mimeType = "image/png";
     private Integer maxTileWidth = 2048;
     private Integer maxTileHeight = 2048;
-    private Map legendMap = new HashMap();
+    private Map<String, String> legendMap = new HashMap<String, String>();
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
     private String tilingBbox = null;
     private String tilingResolutions = null;
@@ -575,7 +575,7 @@ public class CombineImageSettings {
         this.tilingResolutions = tilingResolutions;
     }
 
-    public Map getLegendMap() {
+    public Map<String, String> getLegendMap() {
         return legendMap;
     }
 
