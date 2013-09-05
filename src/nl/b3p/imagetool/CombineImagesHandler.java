@@ -30,13 +30,7 @@ public class CombineImagesHandler {
     
     public static void combineImage(OutputStream out, CombineImageSettings settings, 
             String returnMime, int maxResponseTime, String uname, String pw) throws Exception {
-        
-        /* Calc urls for tiles */
-        /*List<TileImage> tilingImages = new ArrayList();
-        if (settings.getTilingServiceUrl() != null) {            
-            tilingImages = getTilingImages(settings);
-        }*/
-        
+            
         /**
          * Re calc the urls when needed.
          */        

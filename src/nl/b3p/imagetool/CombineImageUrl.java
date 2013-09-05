@@ -26,7 +26,10 @@ public abstract class CombineImageUrl {
         body=ciu.getBody();
         realUrl=ciu.getRealUrl();
     }
-    
+
+    public CombineImageUrl(String url){
+        this(url,new Float(1.0));
+    }
 
     public CombineImageUrl(String url, Float alpha) {
         setUrl(url);

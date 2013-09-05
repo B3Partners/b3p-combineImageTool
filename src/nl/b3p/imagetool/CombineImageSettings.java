@@ -5,10 +5,10 @@
 package nl.b3p.imagetool;
 
 import java.awt.Color;
-import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -41,6 +41,10 @@ public class CombineImageSettings {
     // bbox + ";"+ resolutions + ";" + tileSize + ";" + serviceUrl;
     
     private String tilingServiceUrl = null;    
+    
+    // ToDo: Move this to a more sane place
+    
+    private Map<String, String> legendMap = new HashMap<String, String>();
     
     /**
      * Calculate the urls in the combineImageSettings.
@@ -225,6 +229,15 @@ public class CombineImageSettings {
     public void setAngle(Integer angle) {
         this.angle = angle;
     }
+    
+    
+    public Map<String, String> getLegendMap() {
+        return legendMap;
+    }
+
+    public void setLegendMap(Map legendMap) {
+        this.legendMap = legendMap;
+    }
    
     //</editor-fold>   
     /**
@@ -317,14 +330,18 @@ public class CombineImageSettings {
      *              url: "",
      *              alpha: "",
      *              body: "",
+     *              resolutions: "",
      *              tileWidth: "", //default 256, for tiling
      *              tileHeight: "", //default 256, for tiling
      *              serverExtent: "" //server extent, for tiling
      *          }
      *      ],
      *      geometries: [
-     *          wktgeom: "",
-     *          color: ""
+     *          {
+     *              wktgeom: "",
+     *              color: "",
+     *              label: ""
+     *          }
      *      ],
      *      bbox: "",
      *      width: "",

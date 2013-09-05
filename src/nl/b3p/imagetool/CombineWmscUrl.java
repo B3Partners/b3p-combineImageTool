@@ -9,7 +9,7 @@ package nl.b3p.imagetool;
  *
  * @author Roy Braam
  */
-class CombineWmscUrl extends CombineTileImageUrl {
+public class CombineWmscUrl extends CombineTileImageUrl {
 
     public CombineWmscUrl(CombineWmscUrl cwu){
         super(cwu);
