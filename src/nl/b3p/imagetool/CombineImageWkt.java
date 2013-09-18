@@ -70,8 +70,12 @@ public class CombineImageWkt {
         if (hexrgb==null){
             return;
         }
-        if (hexrgb.length()>0)
+        
+        hexrgb = hexrgb.replaceAll("#", "");
+        
+        if (hexrgb.length()>0) {
             this.color = new Color( Integer.parseInt(( hexrgb ), 16) );
+        }
     }
 
     /**
