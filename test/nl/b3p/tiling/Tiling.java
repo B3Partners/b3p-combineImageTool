@@ -5,6 +5,7 @@
 package nl.b3p.tiling;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import nl.b3p.imagetool.CombineImageSettings;
 import nl.b3p.imagetool.CombineImagesHandler;
@@ -43,34 +44,11 @@ public class Tiling {
 
     private static final String DEST_DIR = "test-output";
     
-     /**
-     * @settings a JSONObject in the following format:
-     * {            
-     *      requests: [
-     *          {
-     *              protocol: "",
-     *              extent: "", //if extent is other then the given bbox.
-     *              url: "",
-     *              alpha: "",
-     *              body: "",
-     *              tileWidth: "", //default 256, for tiling
-     *              tileHeight: "", //default 256, for tiling
-     *              serverExtent: "" //server extent, for tiling
-     *          }
-     *      ],
-     *      geometries: [
-     *          wktgeom: "",
-     *          color: ""
-     *      ],
-     *      bbox: "",
-     *      width: "",
-     *      height: "",
-     *      srid: "",
-     *      angle: "",
-     *      quality: ""
-     *  }
+    @Test
+    /* Test WMSc
      */
-    private static final String JSONCONFIG = "{"
+    public void wmscTest() throws Exception {
+        testImageSettings(new JSONObject("{"
             + "requests: [{"
             + "     protocol: 'WMSC',"
             + "     url: 'http://geodata.nationaalgeoregister.nl/wmsc?request=GetMap&Service=WMS&Format=image/png&srs=epsg:28992&tiled=true&layers=brtachtergrondkaart',"
@@ -83,14 +61,58 @@ public class Tiling {
             + "width: 1024,"
             + "height: 1024,"
             + "srid: 28992"          
-            + "}";
+            + "}"), "WMSc_1.png");
+    }
+    
     @Test
     /* Test WMSc
      */
-    public void wmscTest() throws Exception {
-        CombineImageSettings settings = CombineImageSettings.fromJson(new JSONObject(JSONCONFIG));
-        File f = new File(DEST_DIR + "/WMSc.png");
-        FileOutputStream fos = new FileOutputStream(DEST_DIR + "/WMSc.png");
+    public void wmscTest2() throws Exception {
+        testImageSettings(new JSONObject("{"
+                + "requests:[{"
+                + "     serverExtent:'-285401.920000,22598.080000,595401.920000,903401.920000',"
+                + "     protocol:'WMSC',"
+               // + "     extent: '-285401.920000,22598.080000,595401.920000,903401.920000',"
+               // + "     resolutions:'512,256,128,64,32,16,8,4,2,1,0.5,0.25,0.125',"
+                + "     resolutions: '3440.64,1720.32,860.16,430.08,215.04,107.52,53.76,26.88,13.44,6.72,3.36,1.68,0.84,0.42,0.21',"
+                + "     tileHeight:256,"
+                + "     tileWidth:256,"
+                + "     url: 'http://localhost:8084/kaartenbalie/services/8a5f02d44c2e9b95bd6ed3e39df25d21?&SERVICE=WMS&VERSION=1.1.1&LAYERS=basis_osm&STYLES=&FORMAT=image/png&SRS=EPSG:28992&REQUEST=GetMap'"
+                + "}],"
+                + "height:757,"
+                + "geometries:[],"
+                + "bbox:'150776,444456,154440,447484',"
+                + "width:916"
+                + "}"), "WMSc_2.png");
+    }
+    
+    public void TMSTest() throws Exception {
+        testImageSettings(new JSONObject("{"
+                + "requests:[{"
+                + "     serverExtent:'-285401.92,22598.08,595401.92,903401.92',"
+                + "     protocol:'TMS',"
+               // + "     extent: '-285401.920000,22598.080000,595401.920000,903401.920000',"
+               // + "     resolutions:'512,256,128,64,32,16,8,4,2,1,0.5,0.25,0.125',"
+                + "     resolutions: '3440.64,1720.32,860.16,430.08,215.04,107.52,53.76,26.88,13.44,6.72,3.36,1.68,0.84,0.42,0.21',"
+                + "     tileHeight:256,"
+                + "     tileWidth:256,"
+                + "     url: 'http://www.openbasiskaart.nl/mapcache/tms/1.0.0/osm@rd'"
+                + "}],"
+                + "height:757,"
+                + "geometries:[],"
+                + "bbox:'150776,444456,154440,447484',"
+                + "width:916"
+                + "}"), "TMS.png");
+    }
+    
+    /**
+     * Test the imagesettings.
+     */
+    private void testImageSettings(JSONObject json,String ouputName) throws FileNotFoundException, Exception{
+        CombineImageSettings settings = CombineImageSettings.fromJson(json);
+        File f = new File(DEST_DIR + "/"+ouputName);
+        System.out.println("Writing to: "+f.getAbsolutePath());
+        FileOutputStream fos = new FileOutputStream(f);
         CombineImagesHandler.combineImage(fos, settings);        
     }
 }
