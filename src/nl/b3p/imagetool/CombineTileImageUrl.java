@@ -47,7 +47,7 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
             res = requestBbox.getUnitsPixelX();
         }
         
-        Integer zoomlevel = null;
+        Integer zoomlevel = resolutions.length-1;
         if (resolutions!=null) {                        
             for (int i=0; i < resolutions.length; i++) {
                 Double testRes = resolutions[i];
