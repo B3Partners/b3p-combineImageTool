@@ -138,10 +138,10 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
         Double msx = (requestBbox.getMaxx() - requestBbox.getMinx()) / imageBbox.getWidth();
         Double msy = (requestBbox.getMaxy() - requestBbox.getMiny()) / imageBbox.getHeight();
         
-        Double posX = Math.floor( (tileBbox.getMinx() - requestBbox.getMinx()) / msx );
-        Double posY = Math.floor( (requestBbox.getMaxy() - tileBbox.getMaxy()) / msy );
-        Double width = Math.floor( (tileBbox.getMaxx() - tileBbox.getMinx()) / msx );
-        Double height = Math.floor( (tileBbox.getMaxy() - tileBbox.getMiny()) / msy );
+        Long posX = Math.round((tileBbox.getMinx() - requestBbox.getMinx()) / msx );
+        Long posY = Math.round( (requestBbox.getMaxy() - tileBbox.getMaxy()) / msy );
+        Long width = Math.round( (tileBbox.getMaxx() - tileBbox.getMinx()) / msx );
+        Long height = Math.round( (tileBbox.getMaxy() - tileBbox.getMiny()) / msy );
         
         tile.setX(posX.intValue());
         tile.setY(posY.intValue());
