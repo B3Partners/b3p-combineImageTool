@@ -44,7 +44,7 @@ public class Tiling {
 
     private static final String DEST_DIR = "test-output";
     
-    @Test
+    //@Test
     /* Test WMSc
      */
     public void wmscTest() throws Exception {
@@ -67,7 +67,41 @@ public class Tiling {
     @Test
     /* Test WMSc
      */
-    public void wmscTest2() throws Exception {
+    public void correctTilesTest() throws Exception {
+        testImageSettings(new JSONObject("{"
+                + "requests:[{"
+                + "     serverExtent:'-285401.920000,22598.080000,595401.920000,903401.920000',"
+                + "     protocol:'WMSC',"
+                + "     resolutions: '3440.64,1720.32,860.16,430.08,215.04,107.52,53.76,26.88,13.44,6.72,3.36,1.68,0.84,0.42,0.21',"
+                + "     tileHeight:256,"
+                + "     tileWidth:256,"    
+                + "     correctTiles: false,"
+                + "     url: 'http://www.openbasiskaart.nl/mapcache/?LAYERS=osm-nb&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image%2Fjpeg&SRS=EPSG%3A28992'"
+                + "}],"
+                + "height:3028,"
+                + "geometries:[],"
+                + "bbox:'150776.556754,444456.23452334,154440.3423423,447484.234523',"
+                + "width:3664"
+                + "}"), "NotCorrectedTiles.png");
+        testImageSettings(new JSONObject("{"
+                + "requests:[{"
+                + "     serverExtent:'-285401.920000,22598.080000,595401.920000,903401.920000',"
+                + "     protocol:'WMSC',"
+                + "     resolutions: '3440.64,1720.32,860.16,430.08,215.04,107.52,53.76,26.88,13.44,6.72,3.36,1.68,0.84,0.42,0.21',"
+                + "     tileHeight:256,"
+                + "     tileWidth:256,"
+                + "     url: 'http://www.openbasiskaart.nl/mapcache/?LAYERS=osm-nb&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image%2Fjpeg&SRS=EPSG%3A28992'"
+                + "}],"
+                + "height:3028,"
+                + "geometries:[],"
+                + "bbox:'150776.23452334,444456.23452334,153804.234523,447484.234523',"
+                + "width:3028"
+                + "}"), "CorrectedTiles.png");
+    }
+    //@Test
+    /* Test WMSc
+     */
+    public void wmscTest3() throws Exception {
         testImageSettings(new JSONObject("{"
                 + "requests:[{"
                 + "     serverExtent:'-285401.920000,22598.080000,595401.920000,903401.920000',"
@@ -77,11 +111,11 @@ public class Tiling {
                 + "     tileWidth:256,"                
                 + "     url: 'http://www.openbasiskaart.nl/mapcache/?LAYERS=osm-nb&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image%2Fjpeg&SRS=EPSG%3A28992'"
                 + "}],"
-                + "height:757,"
+                + "height:7570,"
                 + "geometries:[],"
-                + "bbox:'150776,444456,154440,447484',"
-                + "width:916"
-                + "}"), "WMSc_2.png");
+                + "bbox:'150776.556754,444456.23452334,154440.3423423,447484.234523',"
+                + "width:9160"
+                + "}"), "WMSc_3.png");
     }
     /**
      * Test the imagesettings.

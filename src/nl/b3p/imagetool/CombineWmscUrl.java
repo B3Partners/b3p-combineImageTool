@@ -29,5 +29,15 @@ public class CombineWmscUrl extends CombineTileImageUrl {
         return newUrl;
     
     }
+
+    @Override
+    protected int getTileDirectionX() {
+        return 1;
+    }
+
+    @Override
+    protected int getTileDirectionY() {
+        return -1;
+    }
     
 }

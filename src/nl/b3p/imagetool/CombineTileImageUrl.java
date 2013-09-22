@@ -29,7 +29,9 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
     private Double[] resolutions = null;
     private Integer tileWidth = 256;
     private Integer tileHeight = 256;
-    
+    private Integer nextPosX =null;
+    private Integer nextPosY = null;
+    private boolean correctTiles = true;
     private static double epsilon=0.00001;
 
     public CombineTileImageUrl(CombineTileImageUrl ctiu){
@@ -102,6 +104,7 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
          /* 5) Opbouwen nieuwe tile url en per url ook x,y positie van tile bepalen 
          zodat drawImage deze op de juiste plek kan zetten */
         for (int ix = minTileIndexX; ix <= maxTileIndexX; ix++) {
+            nextPosY=null;
             for (int iy = minTileIndexY; iy <= maxTileIndexY; iy++) {
                 double[] tempBbox = new double[4];
                 
@@ -111,8 +114,22 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
                 tempBbox[3] = tempBbox[1] + tileHeightMapUnits;
                 
                 Bbox tileBbox = new Bbox(tempBbox);                
+
+                CombineStaticImageUrl tile = createTile(imbbox, tileBbox, ix, iy,zoomlevel);
                 
-                CombineStaticImageUrl tile = createTile(imbbox, tileBbox, ix, iy,zoomlevel);               
+                Integer tempNextY=tile.getY()+ (getTileDirectionY() * tile.getHeight());
+                Integer tempNextX=null;
+                if (iy==maxTileIndexY){
+                    tempNextX = tile.getX() + (getTileDirectionX() * tile.getWidth());
+                }
+                if (correctTiles){
+                    tile = correctTile(tile);
+                }
+                nextPosY = tempNextY;
+                if (tempNextX!=null){
+                    nextPosX = tempNextX;
+                }
+                //set next tile position                
                 
                 tileImages.add(tile);
             }            
@@ -188,7 +205,17 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
         return tileIndexY.intValue();
     }
 
-
+    private CombineStaticImageUrl correctTile(CombineStaticImageUrl tile) {
+        if (this.nextPosX!=null && !this.nextPosX.equals(tile.getX())){
+            Integer diff = (tile.getX()-this.nextPosX)*getTileDirectionX();
+            tile.setWidth(tile.getWidth()+1);
+        }
+        if (this.nextPosY!=null && !this.nextPosY.equals(tile.getY())){
+            Integer diff = (tile.getY()-this.nextPosY) * getTileDirectionY();
+            tile.setHeight(tile.getHeight()+diff);
+        }
+        return tile;
+    }
     //<editor-fold defaultstate="collapsed" desc="Getters setters">
     /**
      * @return the bbox
@@ -245,8 +272,25 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
     public void setTileHeight(Integer tileHeight) {
         this.tileHeight = tileHeight;
     }
+    
+    public boolean isCorrectTiles() {
+        return correctTiles;
+    }
+
+    public void setCorrectTiles(boolean correctTiles) {
+        this.correctTiles = correctTiles;
+    }
     //</editor-fold>
 
     protected abstract String createUrl(ImageBbox imageBbox, Bbox tileBbox, int indexX, int indexY, int zoomlevel);
+    
+    /**
+     * Return -1 or 1 to indicate the direction of the tile in the image.
+     * 0/0 tile is on 'x','y'
+     * 1/1 tile is on 'x' + (<getTileDirectionX> * tileWidth), 'y' + (<getTileDirectionY> * tileHeight) 
+     */
+    protected abstract int getTileDirectionX();
+    protected abstract int getTileDirectionY();
+
     
 }

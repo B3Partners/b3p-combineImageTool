@@ -394,6 +394,8 @@ public class CombineImageSettings {
                             res[i] = new Double(tokens[i]);
                         }                            
                         cwu.setResolutions(res);
+                    }if (request.has("correctTiles")){
+                        cwu.setCorrectTiles(request.getBoolean("correctTiles"));
                     }
                     ciu = cwu;
                 }
