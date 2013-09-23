@@ -45,6 +45,7 @@ public class CombineImageSettings {
     // ToDo: Move this to a more sane place
     
     private Map<String, String> legendMap = new HashMap<String, String>();
+    private JSONObject originalJSON = new JSONObject();
     
     /**
      * Calculate the urls in the combineImageSettings.
@@ -238,6 +239,14 @@ public class CombineImageSettings {
     public void setLegendMap(Map legendMap) {
         this.legendMap = legendMap;
     }
+
+    public JSONObject getOriginalJSON() {
+        return originalJSON;
+    }
+
+    public void setOriginalJSON(JSONObject originalJSON) {
+        this.originalJSON = originalJSON;
+    }
    
     //</editor-fold>   
     /**
@@ -351,10 +360,11 @@ public class CombineImageSettings {
      *      quality: ""
      *  }
      */
-    public static CombineImageSettings fromJson(JSONObject settings) throws JSONException, Exception{        
+    public static CombineImageSettings fromJson(JSONObject settings) throws JSONException, Exception{
         JSONObject jResponse = new JSONObject();
        
-        CombineImageSettings cis = new CombineImageSettings();            
+        CombineImageSettings cis = new CombineImageSettings();        
+        cis.setOriginalJSON(settings);
         //get the requests
         if (settings.has("requests")){
             JSONArray requests = settings.getJSONArray("requests");
