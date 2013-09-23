@@ -44,7 +44,7 @@ public class Tiling {
 
     private static final String DEST_DIR = "test-output";
     
-    //@Test
+    @Test
     /* Test WMSc
      */
     public void wmscTest() throws Exception {
@@ -80,7 +80,7 @@ public class Tiling {
                 + "}],"
                 + "height:3028,"
                 + "geometries:[],"
-                + "bbox:'150776.556754,444456.23452334,154440.3423423,447484.234523',"
+                + "bbox:'150776.23452334,444456.23452334,153804.234523,447484.234523',"
                 + "width:3664"
                 + "}"), "NotCorrectedTiles.png");
         testImageSettings(new JSONObject("{"
@@ -95,13 +95,13 @@ public class Tiling {
                 + "height:3028,"
                 + "geometries:[],"
                 + "bbox:'150776.23452334,444456.23452334,153804.234523,447484.234523',"
-                + "width:3028"
+                + "width:3664"
                 + "}"), "CorrectedTiles.png");
     }
-    //@Test
+    @Test
     /* Test WMSc
      */
-    public void wmscTest3() throws Exception {
+    public void wmscTest2() throws Exception {
         testImageSettings(new JSONObject("{"
                 + "requests:[{"
                 + "     serverExtent:'-285401.920000,22598.080000,595401.920000,903401.920000',"
@@ -115,7 +115,7 @@ public class Tiling {
                 + "geometries:[],"
                 + "bbox:'150776.556754,444456.23452334,154440.3423423,447484.234523',"
                 + "width:9160"
-                + "}"), "WMSc_3.png");
+                + "}"), "WMSc_2.png");
     }
     /**
      * Test the imagesettings.
