@@ -207,12 +207,30 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
 
     private CombineStaticImageUrl correctTile(CombineStaticImageUrl tile) {
         if (this.nextPosX!=null && !this.nextPosX.equals(tile.getX())){
-            Integer diff = (tile.getX()-this.nextPosX)*getTileDirectionX();
-            tile.setWidth(tile.getWidth()+1);
+            Integer diff = this.nextPosX - tile.getX();
+            if (getTileDirectionX() < 0){
+                /*when tiles are build from right to left, correct the width of
+                 * the tile. The right of this image must connect with the previous
+                 * y image left.
+                 */
+                tile.setWidth(tile.getWidth()+diff);
+            }else{
+                tile.setX(tile.getX()+diff);
+                tile.setWidth(tile.getWidth()-diff);
+            }
         }
         if (this.nextPosY!=null && !this.nextPosY.equals(tile.getY())){
-            Integer diff = (tile.getY()-this.nextPosY) * getTileDirectionY();
-            tile.setHeight(tile.getHeight()+diff);
+            Integer diff = this.nextPosY - tile.getY();
+            if (getTileDirectionY() < 0){
+                /*when tiles are build from bottom to top, correct the height of
+                 * the tile. The bottom of this image must connect with the previous
+                 * y image top.
+                 */
+                tile.setHeight(tile.getHeight()+diff);
+            }else{
+                tile.setY(tile.getY()+diff);
+                tile.setHeight(tile.getHeight()-diff);
+            }
         }
         return tile;
     }
