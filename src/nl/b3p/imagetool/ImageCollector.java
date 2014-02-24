@@ -28,6 +28,7 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import javax.imageio.ImageIO;
 import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
@@ -115,7 +116,15 @@ public class ImageCollector implements Callable<ImageCollector> {
                 throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
             }
 
-            String mime = method.getResponseHeader("Content-Type").getValue();
+            Header header = method.getResponseHeader("Content-Type");
+            String mime = null;
+            
+            if (header == null || header.getValue().isEmpty()) {
+                mime = "image/png";
+            } else {
+                mime = header.getValue();      
+            }                  
+            
             return ImageTool.readImage(method, mime);
         }finally{
             if (method != null) {

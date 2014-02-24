@@ -68,7 +68,8 @@ public class ImageTool {
     public static final String JPEG = "image/jpeg";
     public static final String PNG = "image/png";
 
-    /** Reads an image from an http input stream.
+    /**
+     * Reads an image from an http input stream.
      *
      * @param method Apache HttpClient GetMethod object
      * @param mime String representing the mime type of the image.
@@ -86,13 +87,13 @@ public class ImageTool {
                 mime = mime.substring(0, mime.indexOf(";"));
             }
             String mimeType = getMimeType(mime);
-            
+
             /* TODO: Kijken waarom er geen mime type meer binnenkomt. Wellicht door de 
              * HttpClient vernieuwing in kaartenbalie ? */
             if (mimeType == null) {
                 mimeType = "image/png";
             }
-            
+
             if (mimeType == null) {
                 log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
                 throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
@@ -143,9 +144,12 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** First combines the given images to one image and then sends this image back to the client.
+    /**
+     * First combines the given images to one image and then sends this image
+     * back to the client.
      *
-     * @param images BufferedImage array with the images tha have to be combined and sent to the client.
+     * @param images BufferedImage array with the images tha have to be combined
+     * and sent to the client.
      * @param mime String representing the mime type of the image.
      * @param dw DataWrapper object in which the request object is stored.
      *
@@ -278,7 +282,8 @@ public class ImageTool {
     }
 
     // </editor-fold>
-    /** Writes a TIFF image to the outputstream.
+    /**
+     * Writes a TIFF image to the outputstream.
      *
      * @param bufferedImage BufferedImage created from the given images.
      * @param dw DataWrapper object in which the request object is stored.
@@ -294,7 +299,8 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Writes a JPEG, GIF or PNG image to the outputstream.
+    /**
+     * Writes a JPEG, GIF or PNG image to the outputstream.
      *
      * @param bufferedImage BufferedImage created from the given images.
      * @param dw DataWrapper object in which the request object is stored.
@@ -313,13 +319,19 @@ public class ImageTool {
         ios.close();
     }
     // </editor-fold>
-    /** Method which handles the combining of the images. This method redirects to the right method
-     * for the different images, since not every image can be combined in the same way.
+
+    /**
+     * Method which handles the combining of the images. This method redirects
+     * to the right method for the different images, since not every image can
+     * be combined in the same way.
      *
-     * @param images BufferedImage array with the images tha have to be combined.
+     * @param images BufferedImage array with the images tha have to be
+     * combined.
      * @param mime String representing the mime type of the image.
-     * @param width the width of the result image (or null if the width of the first image must be used)
-     * @param height the height of the result image (or null if the width of the first image must be used)
+     * @param width the width of the result image (or null if the width of the
+     * first image must be used)
+     * @param height the height of the result image (or null if the width of the
+     * first image must be used)
      * @return BufferedImage
      */
     public static BufferedImage combineImages(List<ReferencedImage> images, String mime, Integer width, Integer height) {
@@ -331,22 +343,26 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Combines JPG images. Combining JPG images is different from the other image types since JPG
-     * has to use an other imageType: BufferedImage.TYPE_INT_RGB.
+    /**
+     * Combines JPG images. Combining JPG images is different from the other
+     * image types since JPG has to use an other imageType:
+     * BufferedImage.TYPE_INT_RGB.
      *
      * @param images the referenced Images
-     * @param width the width of the result image (or null if the width of the first image must be used)
-     * @param height the height of the result image (or null if the width of the first image must be used)
+     * @param width the width of the result image (or null if the width of the
+     * first image must be used)
+     * @param height the height of the result image (or null if the width of the
+     * first image must be used)
      *
      * @return BufferedImage
      */
-    private static BufferedImage combineJPGImages(List<ReferencedImage> images,Integer width, Integer height) {
-        if (images.get(0)!=null){
-        BufferedImage bi = images.get(0).getImage();
-            if (width==null){
+    private static BufferedImage combineJPGImages(List<ReferencedImage> images, Integer width, Integer height) {
+        if (images.get(0) != null) {
+            BufferedImage bi = images.get(0).getImage();
+            if (width == null) {
                 width = bi.getWidth();
             }
-            if (height==null){
+            if (height == null) {
                 height = bi.getHeight();
             }
         }
@@ -354,71 +370,82 @@ public class ImageTool {
         BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D gbi = newBufIm.createGraphics();
         for (ReferencedImage image : images) {
-            drawImage(gbi,image);
+            drawImage(gbi, image);
         }
         return newBufIm;
     }
 
-    /** Combines GIF, TIFF or PNG images. Combining these images is different from the JPG image types since these
-     * has to use an other imageType: BufferedImage.TYPE_INT_ARGB_PRE.
+    /**
+     * Combines GIF, TIFF or PNG images. Combining these images is different
+     * from the JPG image types since these has to use an other imageType:
+     * BufferedImage.TYPE_INT_ARGB_PRE.
      *
      * @param images the referenced Images
-     * @param width the width of the result image (or null if the width of the first image must be used)
-     * @param height the height of the result image (or null if the width of the first image must be used)
+     * @param width the width of the result image (or null if the width of the
+     * first image must be used)
+     * @param height the height of the result image (or null if the width of the
+     * first image must be used)
      *
      * @return BufferedImage
      */
-    private static BufferedImage combineOtherImages(List<ReferencedImage> images,Integer width, Integer height) {
-        if (images.get(0)!=null){
+    private static BufferedImage combineOtherImages(List<ReferencedImage> images, Integer width, Integer height) {
+        if (images != null && images.get(0) != null) {
             BufferedImage bi = images.get(0).getImage();
             //if no height / width use the height/widht of the first image.
-            if (height==null){
-                height= bi.getHeight();
+            if (height == null) {
+                height = bi.getHeight();
             }
-            if (width==null){
-                width= bi.getWidth();
+            if (width == null) {
+                width = bi.getWidth();
             }
         }
-        
-        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);        
-        
+
+        BufferedImage newBufIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+
         Graphics2D gbi = newBufIm.createGraphics();
         gbi.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-        for (int i = 0; i < images.size(); i++) {
-            ReferencedImage image =images.get(i);
-            drawImage(gbi,image);
+        if (images != null) {
+            for (int i = 0; i < images.size(); i++) {
+                ReferencedImage image = images.get(i);
+                drawImage(gbi, image);
+            }
         }
+
         return newBufIm;
     }
+
     /**
      * Draws the image to the graphics object.
+     *
      * @param gbi graphics object
      * @param image the referenced image.
      */
-    private static void drawImage(Graphics2D gbi, ReferencedImage image){
-        if (image.getAlpha()!=null){
-            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, image.getAlpha() ));
-        }else {
+    private static void drawImage(Graphics2D gbi, ReferencedImage image) {
+        if (image.getAlpha() != null) {
+            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, image.getAlpha()));
+        } else {
             gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         }
-        Integer x=image.getX();
-        Integer y=image.getY();
-        if (x==null){
-            x=0;
-        }if (y==null){
-            y=0;
+        Integer x = image.getX();
+        Integer y = image.getY();
+        if (x == null) {
+            x = 0;
         }
-        if (image.getHeight()!=null && image.getWidth()!=null){
-            gbi.drawImage(image.getImage(), x, y, image.getWidth(),image.getHeight(),null);        
-        }else{
-            gbi.drawImage(image.getImage(), x, y, null);        
+        if (y == null) {
+            y = 0;
+        }
+        if (image.getHeight() != null && image.getWidth() != null) {
+            gbi.drawImage(image.getImage(), x, y, image.getWidth(), image.getHeight(), null);
+        } else {
+            gbi.drawImage(image.getImage(), x, y, null);
         }
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported MIME types to check if
-     * a certain MIME is supported.
+    /**
+     * Private method which seeks through the supported MIME types to check if a
+     * certain MIME is supported.
      *
      * @param mime String with the MIME to find.
      *
@@ -427,9 +454,9 @@ public class ImageTool {
     // <editor-fold defaultstate="" desc="getMimeType(String mime) method.">
     public static String getMimeType(String mime) {
         /*Crap ESRI, image/jpg is not a content type, needs to be image/jpeg*/
-        if ("image/jpg".equalsIgnoreCase(mime)){
-            mime="image/jpeg";
-        }        
+        if ("image/jpg".equalsIgnoreCase(mime)) {
+            mime = "image/jpeg";
+        }
         String[] mimeTypes = ImageIO.getReaderMIMETypes();
         for (int i = 0; i < mimeTypes.length; i++) {
             if (mimeTypes[i].equalsIgnoreCase(mime)) {
@@ -440,12 +467,14 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getReader(String mime) method.">
     private static ImageReader getReader(String mime) {
@@ -457,15 +486,18 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME. This method checks spe-
-     * cifically for JPG or PNG images because Sun's Java supports two kind of readers
-     * for these particular formats. And because one of these readers doesn't function
-     * well, we need to be sure we have the right reader.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME. This method
+     * checks spe- cifically for JPG or PNG images because Sun's Java supports
+     * two kind of readers for these particular formats. And because one of
+     * these readers doesn't function well, we need to be sure we have the right
+     * reader.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getJPGOrPNGReader(String mime) method.">
     private static ImageReader getJPGOrPNGReader(String mime) {
@@ -485,13 +517,15 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image readers to check if
-     * a there is a reader which handles the specified MIME. This method checks spe-
-     * cifically for GIF or TIFF images.
+    /**
+     * Private method which seeks through the supported image readers to check
+     * if a there is a reader which handles the specified MIME. This method
+     * checks spe- cifically for GIF or TIFF images.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageReader which can handle the specified MIME or null if no reader was found.
+     * @return ImageReader which can handle the specified MIME or null if no
+     * reader was found.
      */
     // <editor-fold defaultstate="" desc="getGIFOrTIFFReader(String mime) method.">
     private static ImageReader getGIFOrTIFFReader(String mime) {
@@ -507,12 +541,14 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getWriter(String mime) method.">
     private ImageWriter getWriter(String mime) {
@@ -524,15 +560,18 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME. This method checks spe-
-     * cifically for JPG or PNG images because Sun's Java supports two kind of writers
-     * for these particular formats. And because one of these writers doesn't function
-     * well, we need to be sure we have the right writers.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME. This method
+     * checks spe- cifically for JPG or PNG images because Sun's Java supports
+     * two kind of writers for these particular formats. And because one of
+     * these writers doesn't function well, we need to be sure we have the right
+     * writers.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getJPGOrPNGWriter(String mime) method.">
     private ImageWriter getJPGOrPNGWriter(String mime) {
@@ -550,13 +589,15 @@ public class ImageTool {
     }
     // </editor-fold>
 
-    /** Private method which seeks through the supported image writers to check if
-     * a there is a writers which handles the specified MIME. This method checks spe-
-     * cifically for GIF or TIFF images.
+    /**
+     * Private method which seeks through the supported image writers to check
+     * if a there is a writers which handles the specified MIME. This method
+     * checks spe- cifically for GIF or TIFF images.
      *
      * @param mime String with the MIME to find.
      *
-     * @return ImageWriter which can handle the specified MIME or null if no writer was found.
+     * @return ImageWriter which can handle the specified MIME or null if no
+     * writer was found.
      */
     // <editor-fold defaultstate="" desc="getGIFOrTIFFWriter(String mime) method.">
     private ImageWriter getGIFOrTIFFWriter(String mime) {
