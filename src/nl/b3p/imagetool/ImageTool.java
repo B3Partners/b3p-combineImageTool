@@ -51,7 +51,6 @@ import javax.imageio.ImageReader;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
-import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geotools.geometry.jts.LiteShape;
@@ -79,7 +78,16 @@ public class ImageTool {
      * @throws Exception
      */
     // <editor-fold defaultstate="" desc="readImage(GetMethod method, String mime) method.">
-    public static BufferedImage readImage(HttpMethod method, String mime) throws Exception {
+    public static BufferedImage readImage(InputStream is, String mime) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int bytesRead = 0;
+        byte[] buffer = new byte[2048];
+        while (bytesRead != -1) {
+            bytesRead = is.read(buffer, 0, buffer.length);
+            if (bytesRead > 0) {
+                baos.write(buffer, 0, bytesRead);
+            }
+        }
         ImageReader ir = null;
         BufferedImage i = null;
         try {
@@ -95,8 +103,8 @@ public class ImageTool {
             }
 
             if (mimeType == null) {
-                log.error("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
-                throw new Exception("Response from server not understood (mime = " + mime + "): " + method.getResponseBodyAsString());
+                log.error("Response from server not understood (mime = " + mime + "): " + baos.toString());
+                throw new Exception("Response from server not understood (mime = " + mime + "): " + baos.toString());
             }
 
             ir = getReader(mimeType);
@@ -105,16 +113,6 @@ public class ImageTool {
                 throw new Exception("no reader available for imageformat: " + mimeType.substring(mimeType.lastIndexOf("/") + 1));
             }
             //TODO Make smarter.. Possibly faster... But keep reporting!
-            InputStream is = method.getResponseBodyAsStream();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int bytesRead = 0;
-            byte[] buffer = new byte[2048];
-            while (bytesRead != -1) {
-                bytesRead = is.read(buffer, 0, buffer.length);
-                if (bytesRead > 0) {
-                    baos.write(buffer, 0, bytesRead);
-                }
-            }
             ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
             ir.setInput(stream, true);
             i = ir.read(0);

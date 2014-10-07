@@ -22,7 +22,6 @@
 package nl.b3p.imagetool;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletionService;
@@ -30,11 +29,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
+import nl.b3p.commons.services.B3PCredentials;
+import nl.b3p.commons.services.HttpClientConfigured;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,43 +42,37 @@ public class ImageManager {
 
     private final Log log = LogFactory.getLog(this.getClass());
     private List<ImageCollector> ics = new ArrayList<ImageCollector>();
-    private int maxResponseTime = 10000;
     private int MAX_TREADS = 8;
     
-    protected static final String host = AuthScope.ANY_HOST;
-    protected static final int port = AuthScope.ANY_PORT;
+    protected static final String host = null;
+    protected static final int port = -1;
 
     public ImageManager(List urls, int maxResponseTime) {
         this(urls, maxResponseTime, null, null);
     }
 
     public ImageManager(List<CombineImageUrl> urls, int maxResponseTime, String uname, String pw) {
-        this.maxResponseTime = maxResponseTime;
         if (urls == null || urls.size() <= 0) {
             return;
         }
-        MultiThreadedHttpConnectionManager connectionManager = 
-      		new MultiThreadedHttpConnectionManager();
-        HttpClient client = new HttpClient(connectionManager);
-        client.getHttpConnectionManager().
-                getParams().setConnectionTimeout(this.maxResponseTime);
-
-        if (uname != null && pw != null) {
-            client.getParams().setAuthenticationPreemptive(true);
-            Credentials defaultcreds = new UsernamePasswordCredentials(uname, pw);
-            AuthScope authScope = new AuthScope(host, port);
-            client.getState().setCredentials(authScope, defaultcreds);
-        }
+        
+        B3PCredentials credentials = new B3PCredentials();
+        credentials.setUserName(uname);
+        credentials.setPassword(pw);
+        credentials.setPreemptive(true);
+        
+        HttpClientConfigured client = new HttpClientConfigured(credentials, maxResponseTime);
+        
         for (CombineImageUrl ciu : urls) {
             ImageCollector ic = null;
             if (ciu instanceof CombineWmsUrl){
-                ic = new ImageCollector(ciu, maxResponseTime, client,uname, pw);
+                ic = new ImageCollector(ciu, client);
             }else if (ciu instanceof CombineArcIMSUrl){
-                ic = new ArcImsImageCollector(ciu, maxResponseTime,client);
+                ic = new ArcImsImageCollector(ciu, client);
             }else if (ciu instanceof CombineArcServerUrl){
-                ic = new ArcServerImageCollector(ciu, maxResponseTime,client);
+                ic = new ArcServerImageCollector(ciu, client);
             }else {
-                ic= new ImageCollector(ciu,maxResponseTime,client,uname,pw);
+                ic= new ImageCollector(ciu, client);
             }
             ics.add(ic);
         }

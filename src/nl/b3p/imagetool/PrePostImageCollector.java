@@ -19,15 +19,14 @@ package nl.b3p.imagetool;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.xml.xpath.XPathExpressionException;
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import nl.b3p.commons.services.HttpClientConfigured;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.util.EntityUtils;
 import org.jdom.JDOMException;
 
 /**
@@ -39,36 +38,36 @@ public abstract class PrePostImageCollector extends ImageCollector{
     private static final Log log = LogFactory.getLog(PrePostImageCollector.class);
     private String body;
     
-    public PrePostImageCollector(CombineImageUrl ciu, int maxResponseTime, HttpClient client){
-        super(ciu,maxResponseTime,client);
+    public PrePostImageCollector(CombineImageUrl ciu, HttpClientConfigured client){
+        super(ciu, client);
         this.body=ciu.getBody();
     }
     
     @Override
-    protected BufferedImage loadImage(String url,String user, String pass) throws IOException, Exception{
-        String theUrl=url;
-        if (this.getBody()!=null){
-            PostMethod method = null;            
-            try{                
-                method=new PostMethod(url);
-                method.setRequestEntity(new StringRequestEntity(this.getBody()));
-                int statusCode = client.executeMethod(method);
-                if (statusCode != HttpStatus.SC_OK) {
+    protected BufferedImage loadImage(String url) throws IOException, Exception {
+        String theUrl = url;
+        if (this.getBody() != null) {
+            HttpPost post = new HttpPost(url);
+            HttpResponse response = client.execute(post);
+            try {
+                int statusCode = response.getStatusLine().getStatusCode();
+                HttpEntity entity = response.getEntity();
+                if (statusCode != 200) {
                     throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
                 }
-                String returnXML=method.getResponseBodyAsString();
-                theUrl= getUrlFromXML(returnXML);
-                if (theUrl==null && returnXML!=null){
-                    throw new Exception("Error getting the correct url. Server returned: \n"+returnXML);
+                String returnXML = EntityUtils.toString(entity);
+                theUrl = getUrlFromXML(returnXML);
+                if (theUrl == null && returnXML != null) {
+                    throw new Exception("Error getting the correct url. Server returned: \n" + returnXML);
                 }
-            }finally{
-                if (method!=null){
-                    method.releaseConnection();
+            } finally {
+                if (response instanceof CloseableHttpResponse) {
+                    ((CloseableHttpResponse) response).close();
                 }
             }
-            
+
         }
-        return super.loadImage(theUrl, user, pass);
+        return super.loadImage(theUrl);
     }
     
     //<editor-fold defaultstate="collapsed" desc="Getters and Setters">

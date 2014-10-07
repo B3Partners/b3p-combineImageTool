@@ -22,7 +22,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import org.apache.commons.httpclient.HttpClient;
+import nl.b3p.commons.services.HttpClientConfigured;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jdom.JDOMException;
@@ -48,8 +48,8 @@ public class ArcServerImageCollector extends PrePostImageCollector{
         }
     }
     
-    public ArcServerImageCollector(CombineImageUrl ciu, int maxResponseTime, HttpClient client){
-        super(ciu,maxResponseTime,client);
+    public ArcServerImageCollector(CombineImageUrl ciu, HttpClientConfigured client){
+        super(ciu, client);
     }
     
     @Override

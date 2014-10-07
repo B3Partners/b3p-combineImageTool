@@ -8,20 +8,18 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.ImageProducer;
-import java.awt.image.RGBImageFilter;
-import java.awt.image.RenderedImage;
 import java.io.FileOutputStream;
+import java.net.ProxySelector;
 import javax.imageio.ImageIO;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 
 /**
  *
@@ -30,33 +28,44 @@ import org.apache.commons.httpclient.methods.GetMethod;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        HttpClient client = new HttpClient();
-        HttpMethod method = null;
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(30000);
-        method = new GetMethod("http://localhost/1.png");
+        RequestConfig defaultRequestConfig = RequestConfig.custom()
+            .setConnectionRequestTimeout(30000)
+            .build();
+        HttpClientBuilder hcb = HttpClients.custom()
+                .setDefaultRequestConfig(defaultRequestConfig);
+       //Use standard JRE proxy selector to obtain proxy information 
+        SystemDefaultRoutePlanner routePlanner = 
+                new SystemDefaultRoutePlanner(ProxySelector.getDefault());
+        hcb.setRoutePlanner(routePlanner); 
+        
+        CloseableHttpClient client = hcb.build();
+
+        HttpGet method = null;
+        HttpResponse response = null;
+        method = new HttpGet("http://localhost/1.png");
         BufferedImage[] bi = new BufferedImage[4];
-        client.executeMethod(method);
-        bi[0] = ImageTool.readImage(method, "image/png");
-        method = new GetMethod("http://localhost/2.png");
-        client.executeMethod(method);
-        bi[1] = ImageTool.readImage(method, "image/png");
-        method = new GetMethod("http://localhost/3.png");
-        client.executeMethod(method);
-        bi[2] = ImageTool.readImage(method, "image/png");
-        method = new GetMethod("http://localhost/4.png");
-        client.executeMethod(method);
-        bi[3] = ImageTool.readImage(method, "image/png");
+        response = client.execute(method);
+        bi[0] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
+        method = new HttpGet("http://localhost/2.png");
+        response = client.execute(method);
+        bi[1] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
+        method = new HttpGet("http://localhost/3.png");
+        response = client.execute(method);
+        bi[2] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
+        method = new HttpGet("http://localhost/4.png");
+        response = client.execute(method);
+        bi[3] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
         //BufferedImage combinedImage = ImageTool.combineImages(bi, "image/png");
         FileOutputStream combinedOut = new FileOutputStream("c:/combined.png");
 
 
         BufferedImage[] bi2 = new BufferedImage[2];
-        method = new GetMethod("http://localhost/5.png");
-        client.executeMethod(method);
-        bi2[0] = ImageTool.readImage(method, "image/png");
-        method = new GetMethod("http://localhost/6.png");
-        client.executeMethod(method);
-        bi2[1] = ImageTool.readImage(method, "image/png");
+        method = new HttpGet("http://localhost/5.png");
+        response = client.execute(method);
+        bi2[0] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
+        method = new HttpGet("http://localhost/6.png");
+        response = client.execute(method);
+        bi2[1] = ImageTool.readImage(response.getEntity().getContent(), "image/png");
         //BufferedImage combinedImage2 = ImageTool.combineImages(bi2, "image/png");
         FileOutputStream combinedOut2 = new FileOutputStream("c:/combined2.png");
 
@@ -76,18 +85,18 @@ public class Main {
         //ImageIO.write(combinedImage2, "png", combinedOut2);
 
         BufferedImage[] in = new BufferedImage[4];
-        method = new GetMethod("http://localhost/1.png");
-        client.executeMethod(method);
-        in[3] = ImageIO.read(method.getResponseBodyAsStream());
-        method = new GetMethod("http://localhost/2.png");
-        client.executeMethod(method);
-        in[2] = ImageIO.read(method.getResponseBodyAsStream());
-        method = new GetMethod("http://localhost/3.png");
-        client.executeMethod(method);
-        in[1] = ImageIO.read(method.getResponseBodyAsStream());
-        method = new GetMethod("http://localhost/4.png");
-        client.executeMethod(method);
-        in[0] = ImageIO.read(method.getResponseBodyAsStream());
+        method = new HttpGet("http://localhost/1.png");
+        response = client.execute(method);
+        in[3] = ImageIO.read(response.getEntity().getContent());
+        method = new HttpGet("http://localhost/2.png");
+        response = client.execute(method);
+        in[2] = ImageIO.read(response.getEntity().getContent());
+        method = new HttpGet("http://localhost/3.png");
+        response = client.execute(method);
+        in[1] = ImageIO.read(response.getEntity().getContent());
+        method = new HttpGet("http://localhost/4.png");
+        response = client.execute(method);
+        in[0] = ImageIO.read(response.getEntity().getContent());
 
         files = new FileOutputStream[4];
         files[0] = new FileOutputStream("c:/imageIO1.png");

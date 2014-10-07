@@ -24,19 +24,16 @@ package nl.b3p.imagetool;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Stack;
 import java.util.concurrent.Callable;
 import javax.imageio.ImageIO;
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
+import nl.b3p.commons.services.HttpClientConfigured;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 
 /**
  * ImageCollector definition:
@@ -44,7 +41,6 @@ import org.apache.commons.logging.LogFactory;
 public class ImageCollector implements Callable<ImageCollector> {
 
     private static final Log log = LogFactory.getLog(ImageCollector.class);
-    private int maxResponseTime = 10000;
     public static final int NEW = 0;
     public static final int ACTIVE = 1;
     public static final int COMPLETED = 2;
@@ -53,28 +49,13 @@ public class ImageCollector implements Callable<ImageCollector> {
     private int status = NEW;
     private String message = null;
     private BufferedImage bufferedImage;
-    private String username = null;
-    private String password = null;
     private CombineImageUrl combinedImageUrl = null;
-    protected HttpClient client =null;
- 
-    /*public ImageCollector(String url, int maxResponseTime) {
-        this.url = url;
-        this.maxResponseTime = maxResponseTime;
-        this.setMessage("Still downloading...");
-    }*/
+    protected HttpClientConfigured client = null;
 
-    public ImageCollector(CombineImageUrl ciu, int maxResponseTime,HttpClient client) {
+    public ImageCollector(CombineImageUrl ciu, HttpClientConfigured client) {
         this.combinedImageUrl=ciu;
-        this.maxResponseTime = maxResponseTime;
         this.client = client;
         this.setMessage("Still downloading...");
-    }
-
-    public ImageCollector(CombineImageUrl ciu, int maxResponseTime, HttpClient client, String uname, String pw) {
-        this(ciu, maxResponseTime, client);
-        this.username = uname;
-        this.password = pw;
     }
 
     public ImageCollector call() throws Exception {        
@@ -87,7 +68,7 @@ public class ImageCollector implements Callable<ImageCollector> {
             if (getRealUrl() != null) {
                 setBufferedImage(ImageIO.read(getRealUrl()));
             } else {
-                setBufferedImage(loadImage(getUrl(),getUsername(),getPassword()));                
+                setBufferedImage(loadImage(getUrl()));                
             }
             setMessage("");
             setStatus(COMPLETED);
@@ -106,29 +87,28 @@ public class ImageCollector implements Callable<ImageCollector> {
      * @throws IOException
      * @throws Exception 
      */
-    protected BufferedImage loadImage(String url, String user, String pass) throws IOException, Exception {
-        HttpMethod method = null;
+    protected BufferedImage loadImage(String url) throws IOException, Exception {
+        HttpGet request = new HttpGet(url);
+        HttpResponse response = client.execute(request);
         try {            
-            method = new GetMethod(url);
-
-            int statusCode = client.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
                 throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
             }
-
-            Header header = method.getResponseHeader("Content-Type");
+            HttpEntity entity = response.getEntity();
+            Header header = entity.getContentType();
             String mime = null;
-            
             if (header == null || header.getValue().isEmpty()) {
                 mime = "image/png";
             } else {
                 mime = header.getValue();      
             }                  
             
-            return ImageTool.readImage(method, mime);
+            return ImageTool.readImage(entity.getContent(), mime);
+            
         }finally{
-            if (method != null) {
-                method.releaseConnection();
+            if (response instanceof CloseableHttpResponse) {
+                ((CloseableHttpResponse)response).close();
             }
         }
     }
@@ -171,30 +151,6 @@ public class ImageCollector implements Callable<ImageCollector> {
     
     public void setMessage(String message) {
         this.message = message;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-    public int getMaxResponseTime() {
-        return maxResponseTime;
-    }
-    
-    public void setMaxResponseTime(int maxResponseTime) {
-        this.maxResponseTime = maxResponseTime;
     }
 
     public CombineImageUrl getCombinedImageUrl() {
