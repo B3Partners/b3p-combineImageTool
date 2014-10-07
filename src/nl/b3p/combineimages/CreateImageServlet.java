@@ -19,7 +19,7 @@ import org.apache.commons.logging.LogFactory;
 public class CreateImageServlet extends HttpServlet {
 
     private static final Log log = LogFactory.getLog(CreateImageServlet.class);
-    private int maxResponseTime = 10000;
+    private int maxResponseTime = -1;
     
     //private String returnMime = "image/png";
 

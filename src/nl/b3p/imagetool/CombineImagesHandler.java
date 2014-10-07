@@ -18,10 +18,9 @@ public class CombineImagesHandler {
 
     private static final Log log = LogFactory.getLog(CombineImagesHandler.class);
     private static String defaultReturnMime = "image/png";
-    private static int defaultMaxResponseTime = 30000;
 
     public static void combineImage(OutputStream out, CombineImageSettings settings) throws Exception {
-        combineImage(out, settings, defaultReturnMime, defaultMaxResponseTime);
+        combineImage(out, settings, defaultReturnMime, -1);
     }
 
     public static void combineImage(OutputStream out, CombineImageSettings settings, String returnMime, int maxResponseTime) throws Exception {
