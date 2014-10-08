@@ -61,21 +61,26 @@ public class ImageManager {
         credentials.setPassword(pw);
         credentials.setPreemptive(true);
         
-        HttpClientConfigured client = new HttpClientConfigured(credentials, maxResponseTime);
+        HttpClientConfigured hcc = new HttpClientConfigured(credentials, maxResponseTime);
         
-        for (CombineImageUrl ciu : urls) {
-            ImageCollector ic = null;
-            if (ciu instanceof CombineWmsUrl){
-                ic = new ImageCollector(ciu, client);
-            }else if (ciu instanceof CombineArcIMSUrl){
-                ic = new ArcImsImageCollector(ciu, client);
-            }else if (ciu instanceof CombineArcServerUrl){
-                ic = new ArcServerImageCollector(ciu, client);
-            }else {
-                ic= new ImageCollector(ciu, client);
+        try {
+            for (CombineImageUrl ciu : urls) {
+                ImageCollector ic = null;
+                if (ciu instanceof CombineWmsUrl) {
+                    ic = new ImageCollector(ciu, hcc);
+                } else if (ciu instanceof CombineArcIMSUrl) {
+                    ic = new ArcImsImageCollector(ciu, hcc);
+                } else if (ciu instanceof CombineArcServerUrl) {
+                    ic = new ArcServerImageCollector(ciu, hcc);
+                } else {
+                    ic = new ImageCollector(ciu, hcc);
+                }
+                ics.add(ic);
             }
-            ics.add(ic);
+        } finally {
+            hcc.close();
         }
+        
     }
 
     public void process() throws Exception {

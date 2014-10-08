@@ -61,11 +61,8 @@ public abstract class PrePostImageCollector extends ImageCollector{
                     throw new Exception("Error getting the correct url. Server returned: \n" + returnXML);
                 }
             } finally {
-                if (response instanceof CloseableHttpResponse) {
-                    ((CloseableHttpResponse) response).close();
-                }
+                client.close(response);
             }
-
         }
         return super.loadImage(theUrl);
     }

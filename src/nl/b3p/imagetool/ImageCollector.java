@@ -81,8 +81,6 @@ public class ImageCollector implements Callable<ImageCollector> {
     /**
      * Load the image with a http-get
      * @param url The url to the image
-     * @param user username
-     * @param pass password
      * @return The image
      * @throws IOException
      * @throws Exception 
@@ -106,10 +104,8 @@ public class ImageCollector implements Callable<ImageCollector> {
             
             return ImageTool.readImage(entity.getContent(), mime);
             
-        }finally{
-            if (response instanceof CloseableHttpResponse) {
-                ((CloseableHttpResponse)response).close();
-            }
+        } finally {
+            client.close(response);
         }
     }
 
