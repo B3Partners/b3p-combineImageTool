@@ -43,6 +43,9 @@ public class ImageManager {
     private final Log log = LogFactory.getLog(this.getClass());
     private List<ImageCollector> ics = new ArrayList<ImageCollector>();
     private int MAX_TREADS = 8;
+    private HttpClientConfigured hcc = null;
+    private ExecutorService threadPool = null;
+    private CompletionService<ImageCollector> pool = null;
     
     protected static final String host = null;
     protected static final int port = -1;
@@ -56,36 +59,32 @@ public class ImageManager {
             return;
         }
         
+        threadPool = Executors.newFixedThreadPool(MAX_TREADS);
+        pool = new ExecutorCompletionService<ImageCollector>(threadPool);
+        
         B3PCredentials credentials = new B3PCredentials();
         credentials.setUserName(uname);
         credentials.setPassword(pw);
         credentials.setPreemptive(true);
         
-        HttpClientConfigured hcc = new HttpClientConfigured(credentials, maxResponseTime);
-        
-        try {
-            for (CombineImageUrl ciu : urls) {
-                ImageCollector ic = null;
-                if (ciu instanceof CombineWmsUrl) {
-                    ic = new ImageCollector(ciu, hcc);
-                } else if (ciu instanceof CombineArcIMSUrl) {
-                    ic = new ArcImsImageCollector(ciu, hcc);
-                } else if (ciu instanceof CombineArcServerUrl) {
-                    ic = new ArcServerImageCollector(ciu, hcc);
-                } else {
-                    ic = new ImageCollector(ciu, hcc);
-                }
-                ics.add(ic);
+        hcc = new HttpClientConfigured(credentials, maxResponseTime);
+
+        for (CombineImageUrl ciu : urls) {
+            ImageCollector ic = null;
+            if (ciu instanceof CombineWmsUrl) {
+                ic = new ImageCollector(ciu, hcc);
+            } else if (ciu instanceof CombineArcIMSUrl) {
+                ic = new ArcImsImageCollector(ciu, hcc);
+            } else if (ciu instanceof CombineArcServerUrl) {
+                ic = new ArcServerImageCollector(ciu, hcc);
+            } else {
+                ic = new ImageCollector(ciu, hcc);
             }
-        } finally {
-            hcc.close();
+            ics.add(ic);
         }
-        
     }
 
     public void process() throws Exception {
-        ExecutorService threadPool=Executors.newFixedThreadPool(MAX_TREADS);
-        CompletionService<ImageCollector> pool = new ExecutorCompletionService<ImageCollector>(threadPool);
         for (ImageCollector ic : ics){
             if (ic.getStatus() == ImageCollector.NEW) {
                 pool.submit(ic);
@@ -133,5 +132,14 @@ public class ImageManager {
             return null;
         }
 
+    }
+    
+    public void close() {
+        if (hcc!=null) {
+            hcc.close();
+        }
+        if (threadPool!=null) {
+            threadPool.shutdown();
+        }
     }
 }

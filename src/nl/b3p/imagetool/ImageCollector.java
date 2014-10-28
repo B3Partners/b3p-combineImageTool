@@ -32,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
 /**
@@ -88,25 +87,20 @@ public class ImageCollector implements Callable<ImageCollector> {
     protected BufferedImage loadImage(String url) throws IOException, Exception {
         HttpGet request = new HttpGet(url);
         HttpResponse response = client.execute(request);
-        try {            
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode != 200) {
-                throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
-            }
-            HttpEntity entity = response.getEntity();
-            Header header = entity.getContentType();
-            String mime = null;
-            if (header == null || header.getValue().isEmpty()) {
-                mime = "image/png";
-            } else {
-                mime = header.getValue();      
-            }                  
-            
-            return ImageTool.readImage(entity.getContent(), mime);
-            
-        } finally {
-            client.close(response);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode != 200) {
+            throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
         }
+        HttpEntity entity = response.getEntity();
+        Header header = entity.getContentType();
+        String mime = null;
+        if (header == null || header.getValue().isEmpty()) {
+            mime = "image/png";
+        } else {
+            mime = header.getValue();
+        }
+
+        return ImageTool.readImage(entity.getContent(), mime);
     }
 
     //<editor-fold defaultstate="collapsed" desc="Getters and setters">

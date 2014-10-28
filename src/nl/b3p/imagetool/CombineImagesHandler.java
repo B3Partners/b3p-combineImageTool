@@ -43,8 +43,8 @@ public class CombineImagesHandler {
             try {
                 im.process();
                 refImages = im.getCombinedImages();
-            } catch (Exception e) {
-                throw e;
+            } finally {
+                im.close();
             }
         }else{
             refImages = new ArrayList<ReferencedImage>();
