@@ -65,7 +65,8 @@ public class ImageManager {
         B3PCredentials credentials = new B3PCredentials();
         credentials.setUserName(uname);
         credentials.setPassword(pw);
-        credentials.setPreemptive(true);
+        //preemptive not possible, varying hosts possible
+        credentials.setPreemptive(false);
         
         hcc = new HttpClientConfigured(credentials, maxResponseTime);
 
