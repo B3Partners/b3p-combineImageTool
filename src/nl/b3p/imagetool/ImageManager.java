@@ -3,19 +3,19 @@
  * for authentication/authorization, pricing and usage reporting.
  *
  * Copyright 2006, 2007, 2008 B3Partners BV
- * 
+ *
  * This file is part of B3P Kaartenbalie.
- * 
+ *
  * B3P Kaartenbalie is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * B3P Kaartenbalie is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with B3P Kaartenbalie.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -40,13 +40,19 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ImageManager {
 
-    private final Log log = LogFactory.getLog(this.getClass());
-    private List<ImageCollector> ics = new ArrayList<ImageCollector>();
-    private int MAX_TREADS = 8;
+    private static final Log log = LogFactory.getLog(ImageManager.class);
+
+    private static final int MAX_TREADS = 8;
+
+    private static int instanceCount = 0;
+
+    private final List<ImageCollector> ics = new ArrayList<ImageCollector>();
     private HttpClientConfigured hcc = null;
     private ExecutorService threadPool = null;
     private CompletionService<ImageCollector> pool = null;
-    
+
+    private final int instanceNumber = ++instanceCount;
+
     protected static final String host = null;
     protected static final int port = -1;
 
@@ -56,30 +62,31 @@ public class ImageManager {
 
     public ImageManager(List<CombineImageUrl> urls, int maxResponseTime, String uname, String pw) {
         if (urls == null || urls.size() <= 0) {
-            return;
+            throw new IllegalArgumentException();
         }
-        
+        log.info(String.format("%s initialized with %d urls, max response time %dms", this.getClass().getName(), urls.size(), maxResponseTime));
+
         threadPool = Executors.newFixedThreadPool(MAX_TREADS);
         pool = new ExecutorCompletionService<ImageCollector>(threadPool);
-        
+
         B3PCredentials credentials = new B3PCredentials();
         credentials.setUserName(uname);
         credentials.setPassword(pw);
         //preemptive not possible, varying hosts possible
         credentials.setPreemptive(false);
-        
+
         hcc = new HttpClientConfigured(credentials, maxResponseTime);
 
         for (CombineImageUrl ciu : urls) {
             ImageCollector ic = null;
             if (ciu instanceof CombineWmsUrl) {
-                ic = new ImageCollector(ciu, hcc);
+                ic = new ImageCollector(this, ciu, hcc);
             } else if (ciu instanceof CombineArcIMSUrl) {
-                ic = new ArcImsImageCollector(ciu, hcc);
+                ic = new ArcImsImageCollector(this, ciu, hcc);
             } else if (ciu instanceof CombineArcServerUrl) {
-                ic = new ArcServerImageCollector(ciu, hcc);
+                ic = new ArcServerImageCollector(this, ciu, hcc);
             } else {
-                ic = new ImageCollector(ciu, hcc);
+                ic = new ImageCollector(this, ciu, hcc);
             }
             ics.add(ic);
         }
@@ -93,13 +100,13 @@ public class ImageManager {
         }
         //wait for all to complete. Wait max 5 min
         for (int i = 0; i < ics.size(); i++) {
-            pool.poll(5, TimeUnit.MINUTES).get();            
-        }             
+            pool.poll(5, TimeUnit.MINUTES).get();
+        }
     }
     /**
      * Combine all the images recieved
      * @return a combined image
-     * @throws Exception 
+     * @throws Exception
      */
     public List<ReferencedImage> getCombinedImages() throws Exception {
         ImageCollector ic = null;
@@ -108,13 +115,10 @@ public class ImageManager {
         while (it.hasNext()) {
             ic = (ImageCollector) it.next();
             int status = ic.getStatus();
-            if (status == ImageCollector.ERROR || ic.getBufferedImage() == null) {
-                log.error(ic.getMessage() + " (Status: " + status + ")");
-            } else if (status != ImageCollector.COMPLETED) {
+            if(status != ImageCollector.COMPLETED) {
                 // problem with one of sp's, but we continue with the rest!
-                log.error(ic.getMessage() + " (Status: " + status + ")");
-            } else {          
-                ReferencedImage image =new ReferencedImage(ic.getBufferedImage());
+            } else {
+                ReferencedImage image =new ReferencedImage(ic);
                 CombineImageUrl ciu = ic.getCombinedImageUrl();
                 image.setAlpha(ciu.getAlpha());
                 if (ciu instanceof CombineStaticImageUrl){
@@ -134,7 +138,7 @@ public class ImageManager {
         }
 
     }
-    
+
     public void close() {
         if (hcc!=null) {
             hcc.close();
@@ -142,5 +146,9 @@ public class ImageManager {
         if (threadPool!=null) {
             threadPool.shutdown();
         }
+    }
+
+    public int getInstanceNumber() {
+        return instanceNumber;
     }
 }

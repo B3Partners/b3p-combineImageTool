@@ -16,7 +16,6 @@
  */
 package nl.b3p.imagetool;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.xml.xpath.XPathExpressionException;
 import nl.b3p.commons.services.HttpClientConfigured;
@@ -24,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.util.EntityUtils;
 import org.jdom.JDOMException;
@@ -37,41 +35,43 @@ import org.jdom.JDOMException;
 public abstract class PrePostImageCollector extends ImageCollector{
     private static final Log log = LogFactory.getLog(PrePostImageCollector.class);
     private String body;
-    
-    public PrePostImageCollector(CombineImageUrl ciu, HttpClientConfigured client){
-        super(ciu, client);
+
+    public PrePostImageCollector(ImageManager manager, CombineImageUrl ciu, HttpClientConfigured client){
+        super(manager, ciu, client);
         this.body=ciu.getBody();
     }
-    
+
     @Override
-    protected BufferedImage loadImage(String url) throws IOException, Exception {
+    protected void downloadImage(String url) throws IOException, Exception {
         String theUrl = url;
-        if (this.getBody() != null) {
+        if(this.getBody() != null) {
+            log.info(preLog + "POSTing body to retrieve image URL...");
             HttpPost post = new HttpPost(url);
             HttpResponse response = client.execute(post);
             try {
                 int statusCode = response.getStatusLine().getStatusCode();
                 HttpEntity entity = response.getEntity();
                 if (statusCode != 200) {
-                    throw new Exception("Error connecting to server. HTTP status code: " + statusCode);
+                    throw new Exception("Error in POST request: HTTP status code: " + statusCode);
                 }
                 String returnXML = EntityUtils.toString(entity);
                 theUrl = getUrlFromXML(returnXML);
                 if (theUrl == null && returnXML != null) {
-                    throw new Exception("Error getting the correct url. Server returned: \n" + returnXML);
+                    throw new Exception("Could not find image URL in POST response. Server returned: \n" + returnXML);
                 }
+                log.info(preLog + "downloading image from URL found in POST response: " + theUrl);
             } finally {
                 client.close(response);
             }
         }
-        return super.loadImage(theUrl);
+        super.downloadImage(theUrl);
     }
-    
+
     //<editor-fold defaultstate="collapsed" desc="Getters and Setters">
     public String getBody() {
         return body;
     }
-    
+
     public void setBody(String body) {
         this.body = body;
     }
@@ -82,7 +82,7 @@ public abstract class PrePostImageCollector extends ImageCollector{
      * @return the url.
      * @throws XPathExpressionException
      * @throws JDOMException
-     * @throws IOException 
+     * @throws IOException
      */
     protected abstract String getUrlFromXML(String returnXML) throws XPathExpressionException, JDOMException, IOException;
 

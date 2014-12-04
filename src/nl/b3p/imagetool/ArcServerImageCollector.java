@@ -29,35 +29,35 @@ import org.jdom.JDOMException;
 import org.xml.sax.InputSource;
 
 /**
- * 
+ *
  * @author Roy Braam
  */
 public class ArcServerImageCollector extends PrePostImageCollector{
     private static final Log log = LogFactory.getLog(ArcServerImageCollector.class);
-    
+
     private static XPathExpression xPathImageURL;
-        
+
     static{
         XPathFactory factory = XPathFactory.newInstance();
-        XPath xPath =  factory.newXPath();        
+        XPath xPath =  factory.newXPath();
         try {
             xPathImageURL = xPath.compile("//ImageURL/text()");
-            
+
         } catch (Exception ex) {
             log.error("Error while creating xpath expr",ex);
         }
     }
-    
-    public ArcServerImageCollector(CombineImageUrl ciu, HttpClientConfigured client){
-        super(ciu, client);
+
+    public ArcServerImageCollector(ImageManager manager, CombineImageUrl ciu, HttpClientConfigured client){
+        super(manager, ciu, client);
     }
-    
+
     @Override
     protected String getUrlFromXML(String returnXML) throws XPathExpressionException, JDOMException, IOException {
         String s=xPathImageURL.evaluate(new InputSource(new StringReader(returnXML)));
         if (s!=null && s.length() ==0){
             s=null;
         }
-        return s;    
+        return s;
     }
 }

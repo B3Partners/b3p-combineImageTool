@@ -24,28 +24,46 @@ import java.awt.image.BufferedImage;
  */
 public class ReferencedImage {
     private BufferedImage image;
+    private ImageCollector ic;
     private Integer x=0;
     private Integer y=0;
     private Integer width=null;
     private Integer height=null;
 
     private Float alpha;
-    
+
     ReferencedImage(BufferedImage bufferedImage) {
         this.image=bufferedImage;
     }
 
+    ReferencedImage(ImageCollector ic) {
+        this.ic = ic;
+    }
+
     ReferencedImage() {}
 
+    public BufferedImage getImage() throws Exception {
+        if(this.image != null) {
+            return image;
+        } else if(ic != null) {
+            image = ic.getBufferedImage();
+            return image;
+        } else {
+            return null;
+        }
+    }
+
+    public void dispose() {
+        if(this.image != null) {
+            this.image = null;
+        }
+        if(this.ic != null) {
+            this.ic.dispose();
+        }
+    }
+
     //<editor-fold defaultstate="collapsed" desc="comment">
-    public BufferedImage getImage() {
-        return image;
-    }
-    
-    public void setImage(BufferedImage image) {
-        this.image = image;
-    }
-        
+
     public Integer getX() {
         return x;
     }
@@ -86,5 +104,5 @@ public class ReferencedImage {
         this.height = height;
     }
 
-    //</editor-fold>    
+    //</editor-fold>
 }
