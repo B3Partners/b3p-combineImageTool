@@ -32,7 +32,9 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
     private Integer nextPosX =null;
     private Integer nextPosY = null;
     private boolean correctTiles = true;
-    private static double epsilon=0.00001;
+    protected String extension;
+    
+    protected static double epsilon=0.0000000001;
 
     public CombineTileImageUrl(CombineTileImageUrl ctiu){
         super(ctiu);
@@ -94,10 +96,10 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
         if (tileWidthMapUnits != null && tileWidthMapUnits > 0 
                 && tileHeightMapUnits != null && tileHeightMapUnits > 0) {  
             
-            minTileIndexX = getTileIndexX(bbox.getMinx(), closestResolution);
-            maxTileIndexX = getTileIndexX(bbox.getMaxx(), closestResolution);
-            minTileIndexY = getTileIndexY(bbox.getMiny(),closestResolution);
-            maxTileIndexY = getTileIndexY(bbox.getMaxy(),closestResolution);            
+            minTileIndexX = getTileIndexX(bbox.getMinx(), closestResolution,false);
+            maxTileIndexX = getTileIndexX(bbox.getMaxx(), closestResolution,true);
+            minTileIndexY = getTileIndexY(bbox.getMiny(),closestResolution,false);
+            maxTileIndexY = getTileIndexY(bbox.getMaxy(),closestResolution,true);            
         }
         
         
@@ -176,7 +178,7 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
      * @param zoomLevel the zoomLevel of the server.
 	 * @see coremodel.service.tiling.factory.TileFactoryInterface#getTileIndexX
     */
-    public Integer getTileIndexX(Double xCoord,Double res){
+    public Integer getTileIndexX(Double xCoord,Double res, boolean max){
         Double tileSpanX= res*getTileWidth();
         Double tileIndexX = Math.floor((xCoord - serviceBbox.getMinx()) / (tileSpanX+epsilon));
         if (tileIndexX < 0) {
@@ -192,7 +194,7 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
      * @param yCoord The y coord.
      * @param zoomLevel the zoomLevel of the server.
     */
-    public Integer getTileIndexY(double yCoord,Double res){
+    public Integer getTileIndexY(double yCoord,Double res, boolean max){
        Double tileSpanY= res*getTileHeight();
         Double tileIndexY = Math.floor((yCoord - serviceBbox.getMiny()) / (tileSpanY+epsilon));
         if (tileIndexY < 0) {
@@ -298,6 +300,16 @@ public abstract class CombineTileImageUrl extends CombineImageUrl{
     public void setCorrectTiles(boolean correctTiles) {
         this.correctTiles = correctTiles;
     }
+    
+    
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+    
     //</editor-fold>
 
     protected abstract String createUrl(ImageBbox imageBbox, Bbox tileBbox, int indexX, int indexY, int zoomlevel);
