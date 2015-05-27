@@ -3,8 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.b3p</groupId>
     <artifactId>b3p-combineImageTool</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.2.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+    
+    <properties>
+        <geotools.version>10.4</geotools.version>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>commons-logging</groupId>
@@ -17,9 +22,9 @@
             <version>20140107</version>
         </dependency>
         <dependency>
-            <groupId>nl.b3p</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>b3p-commons-core</artifactId>
-            <version>4.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>jdom</groupId>
@@ -34,12 +39,12 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-main</artifactId>
-            <version>10.4</version>
+            <version>${geotools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-render</artifactId>
-            <version>10.4</version>
+            <version>${geotools.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -54,11 +59,6 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    <properties>
-        <project.build.sourceEncoding>windows-1252</project.build.sourceEncoding>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
-    </properties>    
     <repositories>
         <repository>
             <id>osgeo</id>
