@@ -41,7 +41,7 @@ public class OpacityTest {
 
     private static final String DEST_DIR = "test-output";
 
-    @Test
+    //@Test
     /* Test het plakken van de volgende images over elkaar:
      * "0 achtergrond.png": 32-bit RGB+alpha achtergrond luchtfoto
      * "1 overlay transparent.png": 32-bit RGB+alpha overlay polygon (transparant)
@@ -60,7 +60,7 @@ public class OpacityTest {
         CombineImagesHandler.combineImage(fos, settings);
     }
 
-    @Test
+    //@Test
     /* Test het plakken van de volgende images over elkaar:
      * "0 achtergrond.png": 32-bit RGB+alpha achtergrond luchtfoto
      * "1 overlay niet transparent.png": 32-bit RGB+alpha overlay polygon, polygoon niet transparant, achtergrond wel
@@ -80,7 +80,7 @@ public class OpacityTest {
         CombineImagesHandler.combineImage(fos, settings);
     }
 
-    @Test
+    //@Test
     /* Test het plakken van de volgende images over elkaar:
      * "0 topografie.png": 24-bit RGB, tRNS: red = 251 green = 251 blue = 251, achtergrond
      * "4 services.png": 32-bit RGB+alpha overlay niet transparant, achtergrond wel
