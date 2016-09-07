@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.b3p</groupId>
     <artifactId>b3p-combineImageTool</artifactId>
-    <version>4.2.3</version>
+    <version>4.2.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <properties>
@@ -80,7 +80,7 @@
         <connection>scm:git:git@github.com:B3Partners/b3p-combineImageTool.git</connection>
         <developerConnection>scm:git:git@github.com:B3Partners/b3p-combineImageTool.git</developerConnection>
         <url>https://github.com/B3Partners/b3p-combineImageTool</url>
-      <tag>b3p-combineImageTool-4.2.3</tag>
+      <tag>b3p-combineImageTool-${project.version}</tag>
     </scm>
     <distributionManagement>
         <repository>
